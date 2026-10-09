@@ -96,11 +96,29 @@ The mod needs no account credentials to build or run unit tests.
 
 ## Install
 
-1. Install Minecraft 1.8.9 and the **Forge 1.8.9 11.15.1.2318** client profile.
-2. Build the JAR above and copy it into your Minecraft instance's `mods` folder.
+1. Download `housing-teleport-helper-*.jar` from the Assets section of the
+   [latest GitHub release](https://github.com/suunxh/Caport-Mod/releases/latest).
+2. Install Minecraft 1.8.9 and the **Forge 1.8.9 11.15.1.2318** client profile,
+   then copy the downloaded JAR into your Minecraft instance's `mods` folder.
 3. Launch the Forge profile and confirm **Housing Teleport Helper** appears in Mods.
 4. Enter a world/server where you have permission, then try G or H and check the
    prepared command before pressing Enter. Do not install this mod on the server.
+
+On Windows with the default launcher directory, press Win+R, enter
+`%appdata%\.minecraft`, and create/open `mods` there. Keep the downloaded file as
+`.jar`; it goes inside that folder. You do not need Gradle to install a release.
+
+## Automatic releases
+
+Every push to `main` builds the mod, runs the full tests, and publishes a GitHub
+release with the installable JAR and SHA-256 checksum. A failed build publishes
+nothing. Releases are named `build-<run number>-<attempt>` so each successful run
+has its own download. Pushing a `v*` tag also publishes a release under that tag.
+The workflow can be started manually from **Actions → Build and release mod JAR →
+Run workflow**. It uses GitHub's built-in token; no personal token is required.
+
+The workflow is in `.github/workflows/release.yml`; asset publication is handled
+by `tools/publish-release.sh`. Build artifacts remain outside Git source control.
 
 ## Configuration
 
