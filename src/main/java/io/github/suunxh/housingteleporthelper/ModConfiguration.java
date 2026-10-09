@@ -5,17 +5,22 @@ import io.github.suunxh.housingteleporthelper.core.TeleportCommandFormatter;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public final class ModConfiguration {
     public double targetRange, plateRange, coneHalfAngle;
     public int precision, cooldownTicks;
     public String commandTemplate;
-    public boolean integerOnly, feedback, directAuthorized, corrected;
+    public boolean integerOnly, feedback, directAuthorized, hypixelRiskAcknowledged, corrected;
     public String[] directAllowedServers;
     public ExecutionPolicy.Mode executionMode;
+    private Configuration savedConfig;
 
     public void load(File file) {
         Configuration config = new Configuration(file);
+        savedConfig = config;
         config.load();
         targetRange = bounded(config, "targetBlockRange", 100, 1, 256, "Dedicated targeting ray length; does not change interaction reach.");
         plateRange = bounded(config, "pressurePlateRange", 64, 1, 64, "Maximum three-dimensional search distance (hard cap 64).");
@@ -30,14 +35,56 @@ public final class ModConfiguration {
         if (!TeleportCommandFormatter.validTemplate(commandTemplate)) {
             commandTemplate = TeleportCommandFormatter.DEFAULT_TEMPLATE; template.set(commandTemplate); corrected = true;
         }
-        Property mode = config.get("execution", "mode", "MANUAL_CONFIRMATION", "MANUAL_CONFIRMATION or DIRECT_COMMAND. Direct mode is private testing only.");
+        Property mode = config.get("execution", "mode", "MANUAL_CONFIRMATION", "MANUAL_CONFIRMATION or DIRECT_COMMAND. Direct commands are automation; server rules apply.");
         try { executionMode = ExecutionPolicy.Mode.valueOf(mode.getString()); }
         catch (IllegalArgumentException e) { executionMode = ExecutionPolicy.Mode.MANUAL_CONFIRMATION; mode.set(executionMode.name()); corrected = true; }
         directAuthorized = config.get("execution", "privateTestingAuthorized", false,
-                "Set true only with express authorization for automation. Required even in singleplayer.").getBoolean();
+                "General direct-command opt-in. Use only where automation is permitted; required even in singleplayer.").getBoolean();
+        hypixelRiskAcknowledged = config.get("execution", "hypixelDirectRiskAcknowledged", false,
+                "Separate Hypixel direct-mode opt-in. NOT approval: automated /tp may violate rules and cause a ban. Default false.").getBoolean();
         directAllowedServers = config.get("execution", "directAllowedServers", new String[0],
-                "Exact authorized private hostnames/IP addresses, no wildcards. Recognized Hypixel domains are always blocked.").getStringList();
+                "Exact opted-in hostnames/IP addresses, no wildcards. Hypixel also requires its separate risk acknowledgment.").getStringList();
         if (config.hasChanged()) config.save();
+    }
+
+    /** Explicit user command enables direct testing only on the current authorized host. */
+    public boolean enableDirectTesting(boolean singleplayer, String address, boolean permissionAcknowledged) {
+        return enableDirectTesting(singleplayer, address, permissionAcknowledged, false);
+    }
+
+    public boolean enableDirectTesting(boolean singleplayer, String address, boolean permissionAcknowledged,
+                                       boolean acknowledgeHypixelRisk) {
+        String host = ExecutionPolicy.hostname(address);
+        if (!singleplayer && (!permissionAcknowledged
+                || !ExecutionPolicy.directAllowed(true, false, address, new String[] {host}, acknowledgeHypixelRisk))) return false;
+        if (savedConfig == null) throw new IllegalStateException("Configuration has not loaded");
+        if (!singleplayer) {
+            List<String> hosts = new ArrayList<String>(Arrays.asList(directAllowedServers));
+            boolean existing = false;
+            for (String value : hosts) if (host.equals(ExecutionPolicy.hostname(value))) existing = true;
+            if (!existing) hosts.add(host);
+            directAllowedServers = hosts.toArray(new String[hosts.size()]);
+        }
+        directAuthorized = true;
+        if (!singleplayer && ExecutionPolicy.recognizedHypixel(address)) hypixelRiskAcknowledged = acknowledgeHypixelRisk;
+        executionMode = ExecutionPolicy.Mode.DIRECT_COMMAND;
+        saveExecution();
+        return true;
+    }
+
+    public void useManualConfirmation() {
+        if (savedConfig == null) throw new IllegalStateException("Configuration has not loaded");
+        executionMode = ExecutionPolicy.Mode.MANUAL_CONFIRMATION;
+        hypixelRiskAcknowledged = false;
+        saveExecution();
+    }
+
+    private void saveExecution() {
+        savedConfig.get("execution", "mode", ExecutionPolicy.DEFAULT_MODE.name()).set(executionMode.name());
+        savedConfig.get("execution", "privateTestingAuthorized", false).set(directAuthorized);
+        savedConfig.get("execution", "hypixelDirectRiskAcknowledged", false).set(hypixelRiskAcknowledged);
+        savedConfig.get("execution", "directAllowedServers", new String[0]).set(directAllowedServers);
+        savedConfig.save();
     }
 
     private double bounded(Configuration config, String name, double fallback, double min, double max, String description) {

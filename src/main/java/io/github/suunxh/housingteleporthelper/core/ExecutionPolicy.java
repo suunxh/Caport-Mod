@@ -32,10 +32,14 @@ public final class ExecutionPolicy {
                 || host.equals("hypixel.io") || host.endsWith(".hypixel.io");
     }
     public static boolean directAllowed(boolean authorized, boolean singleplayer, String address, String[] allowedHosts) {
+        return directAllowed(authorized, singleplayer, address, allowedHosts, false);
+    }
+    public static boolean directAllowed(boolean authorized, boolean singleplayer, String address, String[] allowedHosts,
+                                        boolean hypixelRiskAcknowledged) {
         if (!authorized) return false;
         if (singleplayer) return true;
         String host = hostname(address);
-        if (host.isEmpty() || recognizedHypixel(address)) return false;
+        if (host.isEmpty() || (recognizedHypixel(address) && !hypixelRiskAcknowledged)) return false;
         for (String allowed : allowedHosts) {
             if (!host.isEmpty() && host.equals(hostname(allowed))) return true;
         }

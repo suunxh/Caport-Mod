@@ -21,9 +21,17 @@ public class CommandAndKeybindTest {
     }
     @Test(expected = IllegalArgumentException.class) public void badPrecisionRejected() { formatter.format("/tp {x} {y} {z}", new Vec3d(0, 64, 0), 9, false); }
     @Test(expected = IllegalArgumentException.class) public void nonFiniteRejected() { formatter.format("/tp {x} {y} {z}", new Vec3d(Double.NaN, 64, 0), 5, false); }
-    @Test public void hypixelHostVariantsAlwaysBlocked() {
+    @Test public void hypixelHostVariantsBlockedWithoutSeparateOptIn() {
         for (String host : new String[] {"hypixel.net", "MC.HYPIXEL.NET:25565", "mc.hypixel.net.", "alpha.hypixel.net", "hypixel.io"})
             assertFalse(host, ExecutionPolicy.directAllowed(true, false, host, new String[] {host}));
+    }
+    @Test public void hypixelOptInStillRequiresGeneralConsentAndExactAllowlist() {
+        String[] hosts = {"mc.hypixel.net"};
+        assertTrue(ExecutionPolicy.directAllowed(true, false, "MC.HYPIXEL.NET:25565", hosts, true));
+        assertFalse(ExecutionPolicy.directAllowed(true, false, "mc.hypixel.net", hosts, false));
+        assertFalse(ExecutionPolicy.directAllowed(false, false, "mc.hypixel.net", hosts, true));
+        assertFalse(ExecutionPolicy.directAllowed(true, false, "mc.hypixel.net", new String[0], true));
+        assertFalse(ExecutionPolicy.directAllowed(true, false, "alpha.hypixel.net", hosts, true));
     }
     @Test public void authorizationRequiredEvenInSingleplayer() { assertFalse(ExecutionPolicy.directAllowed(false, true, "", new String[0])); }
     @Test public void authorizedSingleplayerAllowed() { assertTrue(ExecutionPolicy.directAllowed(true, true, "", new String[0])); }

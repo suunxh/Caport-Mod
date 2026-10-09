@@ -1,4 +1,4 @@
-# Housing Teleport Helper (Caport-Mod)
+# caport (Caport-Mod)
 
 A **client-only Minecraft Java 1.8.9 / Forge** mod that prepares a teleport command
 from the block you aim at or the nearest pressure plate in front of you. It uses
@@ -13,7 +13,7 @@ movement packets, server mod, or runtime third-party libraries are needed.
   ±30° cone, then prepares a command for the nearest safe vanilla pressure plate.
 - The default opens chat with `/tp {x} {y} {z}` filled in. **Press Enter yourself**
   to send it, or Escape to cancel. Nothing is sent automatically in this mode.
-- Change either key in **Options → Controls → Housing Teleport Helper**. Mouse
+- Change either key in **Options → Controls → caport**. Mouse
   button binds are supported. If both actions share one key, neither runs; a
   message asks you to choose different keys. Other Minecraft key conflicts remain
   visible in Controls and should also be resolved there.
@@ -39,23 +39,40 @@ Housing teleport permission does not authorize a macro. Hypixel restricts gamepl
 automation/macros, and even client-side targeting assistance is not guaranteed to
 comply with its rules. Check current server rules before using the mod.
 
-Direct command mode is disabled by default and intended only for expressly
-authorized private testing or singleplayer. It requires all of:
+Direct command mode is disabled by default. To enable one-key commands without
+editing a file:
 
-1. `mode=DIRECT_COMMAND`;
-2. `privateTestingAuthorized=true` (including for singleplayer);
-3. For multiplayer, an exact server hostname/IP in `directAllowedServers`.
+- In singleplayer, type `/caport direct`.
+- On an expressly authorized private server, type `/caport direct authorized`.
+  This adds only that exact current hostname/IP to the allowlist.
+- On a recognized Hypixel host, ordinary direct activation stays blocked.
+  The separate `/caport direct hypixel-risk` command explicitly opts into the
+  requested Hypixel behavior and displays a ban-risk warning. **This is not
+  staff approval or a safe-testing guarantee.** Seek current Hypixel staff
+  confirmation before using automated commands there.
+- `/caport manual` restores chat confirmation and clears the Hypixel risk opt-in.
+- `/caport status` shows the configured mode and Hypixel risk opt-in.
 
-Recognized `hypixel.net` / `hypixel.io` domains and their subdomains are always
-blocked from direct mode, regardless of the allowlist. Hostnames are normalized
-for case, ports, trailing dots, and IDN. No wildcard permissions are accepted.
-Restricted direct mode opens manual-confirmation chat instead of sending. Hostname
-checks cannot establish actual authorization or detect every proxy, alias, or IP
-used by a server: **do not allowlist a route to Hypixel or an unauthorized server**.
+Mode changes take effect immediately and persist across restarts. G/H send one
+ordinary command when direct mode is enabled and permitted by the local settings;
+no Enter press is required. The existing cooldown, geometry checks, and server
+permissions still apply. Blocked hosts fall back to manual chat; unsafe destinations are rejected.
 
-Authorized direct mode sends exactly one ordinary chat command, with an optional
-cooldown. There are no automated retries, teleport chains, permission bypasses,
-position spoofing, anti-cheat bypasses, or X-ray rendering.
+Hypixel direct mode requires the general direct-command opt-in, an exact host in
+`directAllowedServers`, and `hypixelDirectRiskAcknowledged=true`. These settings
+are set together only by the explicit risk command on the current recognized
+Hypixel host. Hostnames are normalized for case, ports, trailing dots, and IDN;
+no wildcards are accepted. Recognition cannot detect every alias/proxy/IP, and
+an allowlist entry or risk acknowledgment does not establish server permission.
+
+**There is no guaranteed ban-free test on Hypixel.** Use a singleplayer creative
+world with cheats enabled to verify targeting, plate height, and one-command
+execution. On Hypixel, first seek staff clarification of current rules for the
+exact behavior. Manual mode is not claimed to be approved either.
+
+There are no automated retries, teleport chains, permission bypasses, position
+spoofing, anti-cheat bypasses, or X-ray rendering. `/caport` is a client-local
+settings command and is never sent to the server.
 
 ## Build a JAR
 
@@ -84,7 +101,7 @@ minutes. Later builds reuse the Gradle cache:
 ./gradlew build --max-workers=2
 ```
 
-The installable output is **`build/libs/housing-teleport-helper-1.0.0.jar`**.
+The installable output is **`build/libs/caport-1.0.1.jar`**.
 Use the normal JAR, not a sources or development JAR. `build/`, `run/`, and
 dependency caches are ignored and must not be committed. No Minecraft or Forge
 binaries are included in this repository. The small Gradle wrapper JAR is the
@@ -96,11 +113,13 @@ The mod needs no account credentials to build or run unit tests.
 
 ## Install
 
-1. Download `housing-teleport-helper-*.jar` from the Assets section of the
+1. Download `caport-*.jar` from the Assets section of the
    [latest GitHub release](https://github.com/suunxh/Caport-Mod/releases/latest).
 2. Install Minecraft 1.8.9 and the **Forge 1.8.9 11.15.1.2318** client profile,
    then copy the downloaded JAR into your Minecraft instance's `mods` folder.
-3. Launch the Forge profile and confirm **Housing Teleport Helper** appears in Mods.
+   When updating, remove the previous copy of this mod first; keep only one caport
+   installation. Your existing configuration/keybind settings are retained.
+3. Launch the Forge profile and confirm **caport** appears in Mods.
 4. Enter a world/server where you have permission, then try G or H and check the
    prepared command before pressing Enter. Do not install this mod on the server.
 
@@ -122,6 +141,7 @@ by `tools/publish-release.sh`. Build artifacts remain outside Git source control
 
 ## Configuration
 
+The configuration filename remains unchanged so existing settings are preserved.
 After the first launch, edit **`config/housingteleporthelper.cfg`** in that Minecraft
 instance while the game is closed, then restart. For `runClient`, this file is
 under `run/config/`. Keybinds are saved by Minecraft Controls, not this file.
@@ -138,8 +158,9 @@ Forge includes explanatory comments in the generated configuration.
 | general | feedbackMessages | true | true / false |
 | general | directCommandCooldownTicks | 20 | Integer 0–1200; 20 ticks = 1 second |
 | execution | mode | MANUAL_CONFIRMATION | MANUAL_CONFIRMATION / DIRECT_COMMAND |
-| execution | privateTestingAuthorized | false | true only with express authorization |
-| execution | directAllowedServers | empty list | Exact authorized private hostnames/IPs |
+| execution | privateTestingAuthorized | false | General explicit direct-command opt-in (legacy setting name) |
+| execution | hypixelDirectRiskAcknowledged | false | Separate Hypixel opt-in; not staff approval |
+| execution | directAllowedServers | empty list | Exact explicitly opted-in hostnames/IPs |
 
 The command template accepts literal alphanumeric arguments and exactly one
 standalone `{x}`, `{y}`, `{z}` token each; for example `/teleport {x} {y} {z}`.
@@ -204,8 +225,8 @@ for the current results and in-game checks still requiring a player.
 
 ## Source layout
 
-- `HousingTeleportHelperMod`, `ModConfiguration`, `ChatFeedback`: Forge lifecycle,
-  persistent configuration, and messages.
+- `HousingTeleportHelperMod`, `ModConfiguration`, `ChatFeedback`, `CaportCommand`: Forge lifecycle,
+  persistent configuration, client-local mode commands, and `[caport]` messages.
 - `KeybindHandler`: Controls registration, physical input, bounded tick work,
   and cancellation.
 - `MinecraftWorldView`: loaded client chunk access and 1.8.9 collision/ray APIs.

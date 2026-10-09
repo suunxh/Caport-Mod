@@ -1,6 +1,6 @@
 # Validation and in-game checklist
 
-## Recorded validation
+## Original 1.0.0 validation
 
 Validated in the cloud environment on 2026-10-09 with Temurin Java 8u472,
 Gradle 2.14.1, pinned ForgeGradle 2.1, and Forge 1.8.9-11.15.1.2318:
@@ -14,7 +14,7 @@ Gradle 2.14.1, pinned ForgeGradle 2.1, and Forge 1.8.9-11.15.1.2318:
   tests; the complete build above exercised the current 64 core tests too.
 - `./gradlew runClient`: started on an Xorg dummy display with Mesa software
   rendering, reached the Minecraft 1.8.9 main menu, and Forge reported
-  **4 mods loaded and active**, including Housing Teleport Helper.
+  **4 mods loaded and active**, including Housing Teleport Helper (the original 1.0.0 display name, now caport).
 - The game generated `run/config/housingteleporthelper.cfg` with manual mode,
   authorization false, and an empty private-server allowlist.
 - Both translated bindings appeared in Controls with G/H defaults. In a local
@@ -33,12 +33,12 @@ server permissions or Hypixel authorization have been verified. A first smoke
 attempt encountered a class-loading failure after setup replaced the JAR while
 the client was running; restarting with the completed artifact resolved it and
 both features passed. Stop the client before rebuilding its runtime JAR.
-Complete the remaining interactive checks before distributing the mod.
+The remaining checks below are not claimed as completed.
 
 ## Interactive checks (not yet completed)
 
 - [ ] Install the built JAR in a normal Forge 1.8.9 client; see it in Mods.
-- [x] Both actions appear in Controls with G/H defaults and the translated names.
+- [x] Both actions appear in Controls with G/H defaults and the translated names (original branding).
 - [ ] Rebind both keys, including a mouse button; conflicting assignments give
   feedback and perform neither action.
 - [ ] Hold G/H: exactly one action. Open chat, type G/H, then close while holding
@@ -66,8 +66,9 @@ Complete the remaining interactive checks before distributing the mod.
   One press sends one ordinary command. Repeated presses within cooldown do
   not send; no retries occur after command denial.
 - [ ] Disable authorization or remove the private host: direct mode falls back
-  to manual chat. Recognized Hypixel domains remain blocked by the tested policy;
-  do not test automation on Hypixel itself.
+  to manual chat. Recognized Hypixel domains stay blocked until the separate risk opt-in;
+  this setting does not provide approval or a ban-free testing guarantee. Test
+  the mechanics locally and seek staff confirmation before Hypixel use.
 - [ ] Edit the configuration, restart, and verify persistence and invalid-value
   correction. Set feedback false to verify messages are suppressed.
 
@@ -83,3 +84,31 @@ JUnit results: `build/test-results/TEST-*.xml` (full suite) and
 `build/core-tests/test-results/TEST-*.xml` (core suite). HTML reports are under
 the corresponding `reports/tests/` directories. Use results from the current
 command, and do not treat a skipped or zero-test run as a passing suite.
+
+## caport 1.0.1 checks
+
+The displayed mod name, Controls category, message prefix, JAR, and release title
+now use `caport`. The existing configuration filename and keybinding identifiers
+are retained to preserve user settings. `/caport direct`, `/caport manual`, and
+`/caport status` provide client-local persistent mode controls. Private multiplayer
+activation requires the `authorized` argument. Hypixel activation requires the
+separate explicit `hypixel-risk` argument and warning; it remains blocked by default.
+
+Automated tests additionally cover persisted mode changes, exact host opt-ins,
+missing consent, invalid hosts, default Hypixel blocking, the separate Hypixel
+risk flag, and revocation through manual mode. No Hypixel account or live-server
+automation test has been performed, and no claim of approval or ban-free use is made.
+
+- Full build: **71 passed, 0 failed, 0 errors, 0 skipped** (18 target/safety,
+  22 pressure-plate search, 25 commands/keybinds, 6 persistent configuration).
+- [x] Forge client started; caport resources and `[caport]` messages verified.
+  `/caport status`, `/caport direct`, and `/caport manual` worked in singleplayer.
+- [x] After `/caport direct`, G sent exactly one command to `(0.5,6,5.5)` and H
+  sent exactly one command to `(0.5,4,8.5)`, with no chat screen or Enter press.
+  The integrated server confirmed both teleports. `/caport manual` saved manual
+  mode and H opened prefilled chat again; Escape cancelled it.
+- [x] Mode persistence, default Hypixel blocking, separate risk opt-in, exact
+  allowlisting, missing consent, and manual revocation passed automated checks.
+- [ ] Restart a normal installed client to check mode persistence interactively.
+- [ ] Test on an expressly permitted private multiplayer server. No live Hypixel
+  test was performed; check current rules and seek staff confirmation first.

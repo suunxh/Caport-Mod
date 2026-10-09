@@ -31,7 +31,7 @@ public final class CommandExecutionService {
         }
         ServerData server = mc.getCurrentServerData();
         boolean allowed = ExecutionPolicy.directAllowed(config.directAuthorized, mc.isSingleplayer(),
-                server == null ? "" : server.serverIP, config.directAllowedServers);
+                server == null ? "" : server.serverIP, config.directAllowedServers, config.hypixelRiskAcknowledged);
         CommandDelivery.Outcome outcome = delivery.deliver(config.executionMode, allowed, command.command,
                 tick, config.cooldownTicks, new CommandDelivery.Sink() {
                     @Override public void prepare(String text) { mc.displayGuiScreen(new GuiChat(text)); }

@@ -26,6 +26,7 @@ public class ModConfigurationTest {
         ModConfiguration first = new ModConfiguration(); first.load(file);
         assertTrue(file.isFile()); assertEquals(ExecutionPolicy.Mode.MANUAL_CONFIRMATION, first.executionMode);
         assertFalse(first.directAuthorized); assertEquals(0, first.directAllowedServers.length);
+        assertFalse(first.hypixelRiskAcknowledged);
         assertEquals(64, first.plateRange, 0); assertEquals(100, first.targetRange, 0);
         ModConfiguration second = new ModConfiguration(); second.load(file);
         assertEquals(first.commandTemplate, second.commandTemplate); assertFalse(second.corrected);
@@ -43,5 +44,48 @@ public class ModConfigurationTest {
         assertEquals(5, config.precision); assertEquals("/tp {x} {y} {z}", config.commandTemplate);
         assertEquals(ExecutionPolicy.Mode.MANUAL_CONFIRMATION, config.executionMode);
         ModConfiguration second = new ModConfiguration(); second.load(file); assertFalse(second.corrected);
+    }
+    @Test public void singleplayerDirectTogglePersistsAndManualRestoresConfirmation() {
+        File file = new File(temp.getRoot(), "caport.cfg");
+        ModConfiguration config = new ModConfiguration(); config.load(file);
+        assertTrue(config.enableDirectTesting(true, "", false));
+        ModConfiguration loaded = new ModConfiguration(); loaded.load(file);
+        assertEquals(ExecutionPolicy.Mode.DIRECT_COMMAND, loaded.executionMode); assertTrue(loaded.directAuthorized);
+        assertFalse(loaded.hypixelRiskAcknowledged);
+        loaded.useManualConfirmation();
+        ModConfiguration manual = new ModConfiguration(); manual.load(file);
+        assertEquals(ExecutionPolicy.Mode.MANUAL_CONFIRMATION, manual.executionMode);
+    }
+    @Test public void privateServerNeedsExplicitAuthorizationAndExactHost() {
+        File file = new File(temp.getRoot(), "caport.cfg");
+        ModConfiguration config = new ModConfiguration(); config.load(file);
+        assertFalse(config.enableDirectTesting(false, "private.example", false));
+        assertEquals(ExecutionPolicy.Mode.MANUAL_CONFIRMATION, config.executionMode);
+        assertTrue(config.enableDirectTesting(false, "PRIVATE.EXAMPLE:25565", true));
+        assertArrayEquals(new String[] {"private.example"}, config.directAllowedServers);
+        assertTrue(config.enableDirectTesting(false, "private.example", true));
+        assertEquals(1, config.directAllowedServers.length);
+        ModConfiguration loaded = new ModConfiguration(); loaded.load(file);
+        assertTrue(ExecutionPolicy.directAllowed(loaded.directAuthorized, false, "private.example", loaded.directAllowedServers));
+        assertFalse(ExecutionPolicy.directAllowed(loaded.directAuthorized, false, "other.example", loaded.directAllowedServers));
+    }
+    @Test public void hypixelNeedsSeparateOptInWhichManualModeRevokes() {
+        File file = new File(temp.getRoot(), "caport.cfg");
+        ModConfiguration config = new ModConfiguration(); config.load(file);
+        assertFalse(config.enableDirectTesting(false, "mc.hypixel.net", true));
+        assertFalse(config.hypixelRiskAcknowledged); assertFalse(config.directAuthorized);
+        assertTrue(config.enableDirectTesting(false, "mc.hypixel.net", true, true));
+        ModConfiguration loaded = new ModConfiguration(); loaded.load(file);
+        assertTrue(loaded.hypixelRiskAcknowledged);
+        assertTrue(ExecutionPolicy.directAllowed(loaded.directAuthorized, false, "mc.hypixel.net", loaded.directAllowedServers, loaded.hypixelRiskAcknowledged));
+        loaded.useManualConfirmation();
+        ModConfiguration manual = new ModConfiguration(); manual.load(file);
+        assertFalse(manual.hypixelRiskAcknowledged); assertEquals(ExecutionPolicy.Mode.MANUAL_CONFIRMATION, manual.executionMode);
+    }
+    @Test public void blankOrMalformedHostsCannotBeAuthorized() {
+        ModConfiguration config = new ModConfiguration(); config.load(new File(temp.getRoot(), "caport.cfg"));
+        assertFalse(config.enableDirectTesting(false, "", true));
+        assertFalse(config.enableDirectTesting(false, "mc.hypixel.net:25565:extra", true, true));
+        assertFalse(config.directAuthorized);
     }
 }

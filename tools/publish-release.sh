@@ -15,7 +15,7 @@ if [ "${#jars[@]}" -ne 1 ]; then
 fi
 jar=${jars[0]}
 filename=$(basename "$jar")
-version=${filename#housing-teleport-helper-}
+version=${filename#caport-}
 version=${version%.jar}
 
 # Run numbers prevent distinct builds from overwriting the same version release.
@@ -32,13 +32,16 @@ checksum="$release_dir/${filename}.sha256"
 (cd build/libs && sha256sum "$filename") > "$checksum"
 cat > "$release_dir/notes.md" <<EOF
 Download **${filename}** under Assets and copy it into your Minecraft instance's mods folder.
+When updating, remove the previous copy of this mod first; keep only one installed JAR.
 
 Requires Minecraft Java 1.8.9, Forge 11.15.1.2318, and Java 8.
 
 - G: target-block teleport command.
 - H: nearest suitable pressure plate ahead, within 64 blocks.
 - Manual confirmation is the default: press Enter yourself to send.
-- Direct mode is restricted to explicitly authorized private testing.
+- Direct mode is explicit opt-in; automation can violate server rules.
+- In singleplayer, use /caport direct for one-key commands; /caport manual restores confirmation.
+- Hypixel direct mode requires a separate risk opt-in and is NOT Hypixel-approved. Test locally and seek staff approval first.
 
 This mod is not Hypixel-approved. Server permissions and rules still apply.
 
@@ -50,6 +53,6 @@ EOF
 gh release create "$tag" "$jar" "$checksum" \
   --repo "$GH_REPO" \
   --target "$BUILD_COMMIT" \
-  --title "Housing Teleport Helper ${version} (${tag})" \
+  --title "caport ${version} (${tag})" \
   --notes-file "$release_dir/notes.md" \
   --latest
