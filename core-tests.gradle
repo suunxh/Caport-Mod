@@ -1,0 +1,14 @@
+// Test geometry and safeguards without downloading Minecraft or Forge.
+apply plugin: 'java'
+sourceCompatibility = targetCompatibility = '1.8'
+buildDir = 'build/core-tests'
+repositories { maven { url = 'https://repo.maven.apache.org/maven2' } }
+dependencies { testCompile 'junit:junit:4.13.2' }
+sourceSets.main.java {
+    srcDirs = ['src/main/java']
+    include '**/core/**'
+}
+sourceSets.test.java {
+    srcDirs = ['src/test/java']
+    include '**/core/**'
+}

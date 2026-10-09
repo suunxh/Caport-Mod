@@ -1,0 +1,13 @@
+[
+  {
+    "modid": "housingteleporthelper",
+    "name": "Housing Teleport Helper",
+    "description": "Client-side target and pressure plate teleport command preparation. Manual confirmation by default.",
+    "version": "${version}",
+    "mcversion": "1.8.9",
+    "authorList": ["suunxh"],
+    "credits": "",
+    "url": "https://github.com/suunxh/Caport-Mod",
+    "dependencies": []
+  }
+]
