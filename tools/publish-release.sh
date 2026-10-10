@@ -30,27 +30,29 @@ release_dir=$(mktemp -d)
 trap 'rm -rf "$release_dir"' EXIT
 checksum="$release_dir/${filename}.sha256"
 (cd build/libs && sha256sum "$filename") > "$checksum"
-cat > "$release_dir/notes.md" <<EOF
-Download **${filename}** under Assets and copy it into your Minecraft instance's mods folder.
-Remove the old copy when updating.
 
-Requires Minecraft Java 1.8.9, Forge 11.15.1.2318, and Java 8.
+# Include only changes since the most recent published release in this commit's
+# history. The workflow checks out full history and tags. A newer release from
+# another branch/run must not hide changes in the commit being published.
+published_tags=$(gh release list --repo "$GH_REPO" --exclude-drafts --limit 100 \
+  --json tagName --jq '.[].tagName')
+previous_tag=""
+while IFS= read -r candidate; do
+  if [ -n "$candidate" ] && git merge-base --is-ancestor "refs/tags/$candidate" "$BUILD_COMMIT" 2>/dev/null; then
+    previous_tag=$candidate
+    break
+  fi
+done <<< "$published_tags"
 
-- **G:** teleport to the block you aim at.
-- **H:** teleport to the nearest suitable pressure plate ahead, within 64 blocks.
-- Manual mode: press Enter to send or Escape to cancel.
-- First manual use shows a one-time direct-mode tip. Settings persist across restarts.
-
-Commands:
-
-- \`/caport status\` — show the current mode.
-- \`/caport manual\` — restore manual confirmation.
-- \`/caport direct\` — enable direct mode in singleplayer.
-- \`/caport direct authorized\` — enable direct mode on the current private server.
-- \`/caport direct hypixel-risk\` — enable direct mode on the current Hypixel host, including Housing.
-
-The server must allow you to use /tp. **Use at your own risk.**
-EOF
+if [ -n "$previous_tag" ]; then
+  git log --reverse --no-merges --format='- %s (%h)' \
+    "refs/tags/${previous_tag}..${BUILD_COMMIT}" > "$release_dir/notes.md"
+else
+  git log --reverse --no-merges --format='- %s (%h)' "$BUILD_COMMIT" > "$release_dir/notes.md"
+fi
+if [ ! -s "$release_dir/notes.md" ]; then
+  printf '%s\n' "- Rebuilt commit ${BUILD_COMMIT:0:7}; no changes since the previous release." > "$release_dir/notes.md"
+fi
 
 # A failure to find/read/create a release is fatal. Never overwrite existing
 # release assets or create a release after a failed build.
