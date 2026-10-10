@@ -88,4 +88,38 @@ public class ModConfigurationTest {
         assertFalse(config.enableDirectTesting(false, "mc.hypixel.net:25565:extra", true, true));
         assertFalse(config.directAuthorized);
     }
+    @Test public void firstUseHintSurvivesRestartAndModeChanges() {
+        File file = new File(temp.getRoot(), "caport.cfg");
+        ModConfiguration config = new ModConfiguration(); config.load(file);
+        assertFalse(config.manualModeHintShown);
+        config.markManualModeHintShown();
+        ModConfiguration restarted = new ModConfiguration(); restarted.load(file);
+        assertTrue(restarted.manualModeHintShown);
+        assertEquals(ExecutionPolicy.Mode.MANUAL_CONFIRMATION, restarted.executionMode);
+        restarted.enableDirectTesting(true, "", false);
+        restarted.useManualConfirmation();
+        ModConfiguration manual = new ModConfiguration(); manual.load(file);
+        assertTrue(manual.manualModeHintShown);
+    }
+    @Test public void addingHintToExistingConfigPreservesDirectAndCommandSettings() {
+        File file = new File(temp.getRoot(), "caport.cfg");
+        Configuration old = new Configuration(file);
+        old.get("execution", "mode", "").set("DIRECT_COMMAND");
+        old.get("execution", "privateTestingAuthorized", false).set(true);
+        old.get("execution", "hypixelDirectRiskAcknowledged", false).set(true);
+        old.get("execution", "directAllowedServers", new String[0]).set(new String[] {"mc.hypixel.net"});
+        old.get("general", "commandTemplate", "").set("/teleport {x} {y} {z}");
+        old.get("general", "targetBlockRange", 100.0).set(80.0);
+        old.save();
+        ModConfiguration upgraded = new ModConfiguration(); upgraded.load(file);
+        assertFalse(upgraded.manualModeHintShown);
+        upgraded.markManualModeHintShown();
+        ModConfiguration loaded = new ModConfiguration(); loaded.load(file);
+        assertEquals("/teleport {x} {y} {z}", loaded.commandTemplate);
+        assertEquals(80, loaded.targetRange, 0);
+        assertEquals(ExecutionPolicy.Mode.DIRECT_COMMAND, loaded.executionMode);
+        assertTrue(loaded.directAuthorized); assertTrue(loaded.hypixelRiskAcknowledged);
+        assertArrayEquals(new String[] {"mc.hypixel.net"}, loaded.directAllowedServers);
+        assertTrue(loaded.manualModeHintShown);
+    }
 }

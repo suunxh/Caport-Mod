@@ -13,7 +13,7 @@ public final class ModConfiguration {
     public double targetRange, plateRange, coneHalfAngle;
     public int precision, cooldownTicks;
     public String commandTemplate;
-    public boolean integerOnly, feedback, directAuthorized, hypixelRiskAcknowledged, corrected;
+    public boolean integerOnly, feedback, directAuthorized, hypixelRiskAcknowledged, manualModeHintShown, corrected;
     public String[] directAllowedServers;
     public ExecutionPolicy.Mode executionMode;
     private Configuration savedConfig;
@@ -29,6 +29,8 @@ public final class ModConfiguration {
         cooldownTicks = (int) bounded(config, "directCommandCooldownTicks", 20, 0, 1200, "Optional cooldown for authorized direct testing only (20 ticks = 1 second).");
         integerOnly = config.get("general", "integerCoordinates", false, "Floor coordinates to integers; fractional surfaces may be rejected as unsafe.").getBoolean();
         feedback = config.get("general", "feedbackMessages", true, "Show concise action feedback.").getBoolean();
+        manualModeHintShown = config.get("general", "manualModeHintShown", false,
+                "Tracks whether the first-use manual-mode tip has already been shown.").getBoolean();
         Property template = config.get("general", "commandTemplate", TeleportCommandFormatter.DEFAULT_TEMPLATE,
                 "One chat command with exactly one each of {x}, {y}, {z}. No newline or other placeholders.");
         commandTemplate = template.getString();
@@ -77,6 +79,14 @@ public final class ModConfiguration {
         executionMode = ExecutionPolicy.Mode.MANUAL_CONFIRMATION;
         hypixelRiskAcknowledged = false;
         saveExecution();
+    }
+
+    public void markManualModeHintShown() {
+        if (savedConfig == null) throw new IllegalStateException("Configuration has not loaded");
+        if (manualModeHintShown) return;
+        manualModeHintShown = true;
+        savedConfig.get("general", "manualModeHintShown", false).set(true);
+        savedConfig.save();
     }
 
     private void saveExecution() {

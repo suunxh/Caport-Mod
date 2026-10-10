@@ -39,6 +39,7 @@ Requires Minecraft Java 1.8.9, Forge 11.15.1.2318, and Java 8.
 - **G:** teleport to the block you aim at.
 - **H:** teleport to the nearest suitable pressure plate ahead, within 64 blocks.
 - Manual mode: press Enter to send or Escape to cancel.
+- First manual use shows a one-time direct-mode tip. Settings persist across restarts.
 
 Commands:
 

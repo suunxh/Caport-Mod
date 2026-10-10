@@ -7,7 +7,7 @@ buildscript {
 }
 apply plugin: 'net.minecraftforge.gradle.forge'
 
-version = '1.0.1'
+version = '1.0.2'
 group = 'io.github.suunxh.housingteleporthelper'
 archivesBaseName = 'caport'
 sourceCompatibility = targetCompatibility = '1.8'

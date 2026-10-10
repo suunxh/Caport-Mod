@@ -25,6 +25,12 @@ public class CommandAndKeybindTest {
         for (String host : new String[] {"hypixel.net", "MC.HYPIXEL.NET:25565", "mc.hypixel.net.", "alpha.hypixel.net", "hypixel.io"})
             assertFalse(host, ExecutionPolicy.directAllowed(true, false, host, new String[] {host}));
     }
+    @Test public void directModeHintUsesCurrentServerContext() {
+        assertEquals("/caport direct", ExecutionPolicy.directModeCommand(true, ""));
+        assertEquals("/caport direct hypixel-risk", ExecutionPolicy.directModeCommand(false, "MC.HYPIXEL.NET.:25565"));
+        assertEquals("/caport direct authorized", ExecutionPolicy.directModeCommand(false, "private.example"));
+        assertEquals("/caport direct authorized", ExecutionPolicy.directModeCommand(false, "mc.hypixel.net.example.org"));
+    }
     @Test public void hypixelOptInStillRequiresGeneralConsentAndExactAllowlist() {
         String[] hosts = {"mc.hypixel.net"};
         assertTrue(ExecutionPolicy.directAllowed(true, false, "MC.HYPIXEL.NET:25565", hosts, true));

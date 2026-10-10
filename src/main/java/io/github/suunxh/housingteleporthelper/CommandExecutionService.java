@@ -43,5 +43,11 @@ public final class CommandExecutionService {
             case SENT: feedback.show("Teleport command sent once."); break;
             default: feedback.show("Command prepared. Press Enter to send.");
         }
+        if ((outcome == CommandDelivery.Outcome.PREPARED || outcome == CommandDelivery.Outcome.RESTRICTED)
+                && config.feedback && !config.manualModeHintShown) {
+            feedback.show("Tip: Skip Enter with " + ExecutionPolicy.directModeCommand(mc.isSingleplayer(),
+                    server == null ? "" : server.serverIP) + ". Saved across restarts. Use at your own risk.");
+            config.markManualModeHintShown();
+        }
     }
 }

@@ -31,6 +31,10 @@ public final class ExecutionPolicy {
         return host.equals("hypixel.net") || host.endsWith(".hypixel.net")
                 || host.equals("hypixel.io") || host.endsWith(".hypixel.io");
     }
+    public static String directModeCommand(boolean singleplayer, String address) {
+        if (singleplayer) return "/caport direct";
+        return recognizedHypixel(address) ? "/caport direct hypixel-risk" : "/caport direct authorized";
+    }
     public static boolean directAllowed(boolean authorized, boolean singleplayer, String address, String[] allowedHosts) {
         return directAllowed(authorized, singleplayer, address, allowedHosts, false);
     }

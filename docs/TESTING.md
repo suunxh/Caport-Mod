@@ -112,3 +112,22 @@ automation test has been performed, and no claim of approval or ban-free use is 
 - [ ] Restart a normal installed client to check mode persistence interactively.
 - [ ] Test on an expressly permitted private multiplayer server. No live Hypixel
   test was performed; check current rules and seek staff confirmation first.
+
+## caport 1.0.2 checks
+
+Validated on 2026-10-10 with the same Java 8 / Forge toolchain:
+
+- Full build: **74 passed, 0 failed, 0 errors, 0 skipped** (18 target/safety,
+  22 pressure-plate search, 26 commands/keybinds, 8 persistent configuration).
+- In the local Forge client, the first G action opened `/tp 0.5 6 5.5` in
+  manual chat and showed the singleplayer `/caport direct` tip. Escape cancelled
+  it. A second G action prepared the same command without repeating the tip.
+  Neither preparation sent a teleport command.
+- The generated configuration saved `manualModeHintShown=true` and retained
+  `MANUAL_CONFIRMATION`. Automated reload checks verified that the hint state
+  survives restarts and mode changes, and adding the setting to an older config
+  preserves its direct mode, host opt-ins, custom command, and target range.
+- Context tests verified the suggested singleplayer, private-server, and Hypixel
+  commands, including hostname normalization and a Hypixel-looking unrelated host.
+- Minecraft's Controls code saves key changes in `options.txt`; caport keeps its
+  existing keybinding identifiers. No live Hypixel testing was performed.
