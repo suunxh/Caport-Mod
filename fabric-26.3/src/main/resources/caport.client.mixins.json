@@ -1,0 +1,1 @@
+{"required":true,"package":"io.github.suunxh.caport.fabric.mixin","compatibilityLevel":"JAVA_25","client":["BlockUpdatesMixin"],"injectors":{"defaultRequire":1}}

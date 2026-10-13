@@ -2,7 +2,7 @@ package io.github.suunxh.housingteleporthelper.core;
 
 import java.util.*;
 
-final class FakeWorld implements WorldView {
+class FakeWorld implements WorldView {
     final Map<String, List<Box>> blocks = new HashMap<String, List<Box>>();
     final Set<String> plates = new HashSet<String>();
     final Set<String> unloadedChunks = new HashSet<String>();
@@ -13,7 +13,7 @@ final class FakeWorld implements WorldView {
     FakeWorld plate(int x, int y, int z) { plates.add(key(x, y, z)); return solid(x, y - 1, z); }
     FakeWorld unload(int chunkX, int chunkZ) { unloadedChunks.add(chunkX + "," + chunkZ); return this; }
     @Override public boolean isLoaded(int x, int y, int z) {
-        loadChecks++; return y >= 0 && y < 256 && !unloadedChunks.contains((x >> 4) + "," + (z >> 4));
+        loadChecks++; return y >= minY() && y < maxY() && !unloadedChunks.contains((x >> 4) + "," + (z >> 4));
     }
     @Override public boolean isSectionEmpty(int x, int y, int z) { return false; }
     @Override public boolean isPressurePlate(int x, int y, int z) {

@@ -1,8 +1,8 @@
-name: Build and release mod JAR
+name: Build and release mod JARs
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'codex/**']
     tags: ['v*']
   workflow_dispatch:
 
@@ -10,33 +10,76 @@ permissions:
   contents: write
 
 jobs:
-  release:
+  build:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: forge-1.8.9
+            java: '8'
+          - platform: fabric-26.3
+            java: '25'
     env:
       GRADLE_USER_HOME: ${{ github.workspace }}/.gradle-cache
     steps:
-      - name: Check out the exact build commit
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 0
-
-      - name: Install Java 8
-        uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
         with:
           distribution: temurin
-          java-version: '8'
-
-      - name: Prepare the Forge workspace
-        run: ./gradlew setupDecompWorkspace getAssetIndex -x getAssets --no-daemon --max-workers=2
-
-      - name: Download and verify Minecraft assets over HTTPS
-        run: python3 tools/fetch-assets.py
-
-      - name: Build and run the complete test suite
-        run: ./gradlew setupDecompWorkspace build --no-daemon --max-workers=2
-
-      - name: Publish the installable JAR and its checksum
+          java-version: ${{ matrix.java }}
+      - name: Build and test Forge 1.8.9
+        if: matrix.platform == 'forge-1.8.9'
+        run: |
+          ./gradlew setupDecompWorkspace getAssetIndex -x getAssets --no-daemon --max-workers=2
+          python3 tools/fetch-assets.py
+          ./gradlew setupDecompWorkspace build --no-daemon --max-workers=2
+      - name: Build and test Fabric 26.3
+        if: matrix.platform == 'fabric-26.3'
+        run: ./fabric-26.3/gradlew -p fabric-26.3 build --no-daemon --max-workers=2
+      - name: Start the Fabric development client and reach the title screen
+        if: matrix.platform == 'fabric-26.3'
+        env:
+          CAPORT_SMOKE_TEST: '1'
+          LIBGL_ALWAYS_SOFTWARE: 'true'
+          SDL_VIDEODRIVER: x11
+        run: |
+          timeout 120s xvfb-run -a ./fabric-26.3/gradlew -p fabric-26.3 runClient --no-daemon --max-workers=2 > fabric-26.3/build/client-smoke.log 2>&1 || { cat fabric-26.3/build/client-smoke.log; exit 1; }
+          rg -F 'caport client smoke: title screen reached' fabric-26.3/build/client-smoke.log
+      - name: Upload the installable JAR
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: ${{ matrix.platform }}
+          path: |
+            build/libs/caport-${{ matrix.platform }}-*.jar
+            fabric-26.3/build/libs/caport-${{ matrix.platform }}-*.jar
+          if-no-files-found: error
+      - name: Upload Fabric startup log
+        if: always() && matrix.platform == 'fabric-26.3'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: fabric-startup-log
+          path: fabric-26.3/build/client-smoke.log
+          if-no-files-found: ignore
+  release:
+    if: github.ref == 'refs/heads/main' || github.ref_type == 'tag' || github.event_name == 'workflow_dispatch'
+    needs: build
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        platform: [forge-1.8.9, fabric-26.3]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: ${{ matrix.platform }}
+          path: release-assets
+      - name: Publish platform release and checksum
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
@@ -45,4 +88,6 @@ jobs:
           BUILD_REF_NAME: ${{ github.ref_name }}
           BUILD_NUMBER: ${{ github.run_number }}
           BUILD_ATTEMPT: ${{ github.run_attempt }}
+          RELEASE_PLATFORM: ${{ matrix.platform }}
+          JAR_DIRECTORY: release-assets
         run: bash tools/publish-release.sh

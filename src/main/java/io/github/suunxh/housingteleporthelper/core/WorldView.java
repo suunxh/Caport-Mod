@@ -4,6 +4,8 @@ import java.util.List;
 
 /** All methods run on the client thread; implementations must never load chunks. */
 public interface WorldView {
+    default int minY() { return 0; }
+    default int maxY() { return 256; }
     boolean isLoaded(int x, int y, int z);
     default boolean isGeometryLoaded(int x, int y, int z) { return isLoaded(x, y, z); }
     boolean isSectionEmpty(int x, int y, int z);

@@ -6,7 +6,7 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.client.ClientCommandHandler;
 
-@Mod(modid = HousingTeleportHelperMod.MOD_ID, name = "caport", version = "1.0.2",
+@Mod(modid = HousingTeleportHelperMod.MOD_ID, name = "caport", version = "1.1.0",
         acceptedMinecraftVersions = "[1.8.9]", clientSideOnly = true, acceptableRemoteVersions = "*")
 public final class HousingTeleportHelperMod {
     public static final String MOD_ID = "housingteleporthelper";
