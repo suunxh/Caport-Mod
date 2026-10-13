@@ -38,5 +38,5 @@ Do not commit generated game/dependency files, client worlds, or installable JAR
 Review branches build/test both platforms without publishing. Main/tag builds
 publish two distinct releases only after both builds pass. Release descriptions
 contain changelogs; installation requirements and usage remain in the README.
-The Fabric job additionally launches a development client on a virtual display,
+The Fabric job additionally launches a development client on a dummy Xorg display with Mesa software graphics,
 reaches the title screen, and shuts down through the opt-in smoke-test flag.

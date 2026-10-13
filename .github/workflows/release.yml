@@ -48,14 +48,23 @@ jobs:
             exit 1
           fi
           cat "$RUNNER_TEMP/fabric-build.log"
+      - name: Install software graphics for the Fabric startup check
+        if: matrix.platform == 'fabric-26.3'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y xserver-xorg-core xserver-xorg-video-dummy libgl1-mesa-dri libglx-mesa0 mesa-vulkan-drivers libvulkan1
       - name: Start the Fabric development client and reach the title screen
         if: matrix.platform == 'fabric-26.3'
         env:
           CAPORT_SMOKE_TEST: '1'
           LIBGL_ALWAYS_SOFTWARE: 'true'
           SDL_VIDEODRIVER: x11
+          DISPLAY: ':99'
+          VK_ICD_FILENAMES: /usr/share/vulkan/icd.d/lvp_icd.x86_64.json
         run: |
-          timeout 120s xvfb-run -a ./fabric-26.3/gradlew -p fabric-26.3 runClient --no-daemon --max-workers=2 > fabric-26.3/build/client-smoke.log 2>&1 || { cat fabric-26.3/build/client-smoke.log; python3 tools/ci-error.py fabric-26.3/build/client-smoke.log; exit 1; }
+          sudo Xorg :99 -config "$GITHUB_WORKSPACE/tools/xorg-dummy.conf" -logfile "$RUNNER_TEMP/caport-xorg.log" -noreset -nolisten tcp -ac > "$RUNNER_TEMP/caport-xorg-stdout.log" 2>&1 &
+          for attempt in {1..30}; do xdpyinfo -display :99 >/dev/null 2>&1 && break; sleep 1; done
+          timeout 120s ./fabric-26.3/gradlew -p fabric-26.3 runClient --no-daemon --max-workers=2 > fabric-26.3/build/client-smoke.log 2>&1 || { cat fabric-26.3/build/client-smoke.log; python3 tools/ci-error.py fabric-26.3/build/client-smoke.log; exit 1; }
           rg -F 'caport client smoke: title screen reached' fabric-26.3/build/client-smoke.log
       - name: Upload the installable JAR
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
