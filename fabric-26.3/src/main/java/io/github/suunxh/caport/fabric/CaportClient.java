@@ -33,6 +33,7 @@ public final class CaportClient implements ClientModInitializer {
     private Vec3d searchOrigin;
     private long ticks,searchStarted;
     private int smokeTicks;
+    private Class<?> smokeScreen;
     @Override public void onInitializeClient() {
         instance=this;
         config=new FabricConfiguration(FabricLoader.getInstance().getConfigDir().resolve("caport.properties"));
@@ -88,9 +89,16 @@ public final class CaportClient implements ClientModInitializer {
     private void cancelSearch() { search=null;searchWorld=null;searchPlayer=null;searchView=null;searchOrigin=null; }
     private void tick(Minecraft mc) {
         ticks++;
-        if(Boolean.getBoolean("caport.smokeTest") && mc.gui.screen() instanceof net.minecraft.client.gui.screens.TitleScreen
-                && mc.gui.overlay()==null && ++smokeTicks>=5) {
-            org.slf4j.LoggerFactory.getLogger("caport").info("caport client smoke: title screen reached");mc.stop();return;
+        if(Boolean.getBoolean("caport.smokeTest")) {
+            if(mc.gui.screen()!=null && mc.gui.screen().getClass()!=smokeScreen) {
+                smokeScreen=mc.gui.screen().getClass();
+                org.slf4j.LoggerFactory.getLogger("caport").info("caport smoke screen: {}",smokeScreen.getSimpleName());
+            }
+            if(mc.gui.overlay()==null && mc.gui.screen() instanceof net.minecraft.client.gui.screens.AccessibilityOnboardingScreen onboarding)
+                onboarding.onClose();
+            if(mc.gui.screen() instanceof net.minecraft.client.gui.screens.TitleScreen && mc.gui.overlay()==null && ++smokeTicks>=5) {
+                org.slf4j.LoggerFactory.getLogger("caport").info("caport client smoke: title screen reached");mc.stop();return;
+            }
         }
         if(mc.level!=previousWorld) {cancelSearch();index.clear();delivery.reset();previousWorld=mc.level;}
         boolean enabled=mc.player!=null && mc.level!=null && mc.gui.screen()==null && mc.isWindowActive();
