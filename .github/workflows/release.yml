@@ -11,6 +11,7 @@ permissions:
 
 jobs:
   build:
+    name: Build ${{ matrix.platform }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     strategy:
@@ -20,9 +21,11 @@ jobs:
           - platform: forge-1.8.9
             java: '8'
             jar_path: build/libs/caport-forge-1.8.9-*.jar
+            test_results: build/test-results
           - platform: fabric-26.3
             java: '25'
             jar_path: fabric-26.3/build/libs/caport-fabric-26.3-*.jar
+            test_results: fabric-26.3/build/test-results
     env:
       GRADLE_USER_HOME: ${{ github.workspace }}/.gradle-cache
     steps:
@@ -48,6 +51,8 @@ jobs:
             exit 1
           fi
           cat "$RUNNER_TEMP/fabric-build.log"
+      - name: Verify and report test results
+        run: python3 tools/check-test-results.py '${{ matrix.test_results }}'
       - name: Install software graphics for the Fabric startup check
         if: matrix.platform == 'fabric-26.3'
         run: |
@@ -60,7 +65,7 @@ jobs:
           LIBGL_ALWAYS_SOFTWARE: 'true'
           SDL_VIDEODRIVER: x11
           DISPLAY: ':98'
-          SDL_VIDEO_X11_FORCE_EGL: '1'
+          SDL_VIDEO_FORCE_EGL: '1'
           VK_ICD_FILENAMES: /usr/share/vulkan/icd.d/lvp_icd.x86_64.json
         run: |
           sudo Xorg :98 -config "$GITHUB_WORKSPACE/tools/xorg-dummy.conf" -logfile "$RUNNER_TEMP/caport-xorg.log" -noreset -nolisten tcp -ac > "$RUNNER_TEMP/caport-xorg-stdout.log" 2>&1 &

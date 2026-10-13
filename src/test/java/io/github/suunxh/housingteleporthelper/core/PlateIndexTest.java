@@ -55,4 +55,19 @@ public class PlateIndexTest {
         PressurePlateIndex index = new PressurePlateIndex(); warm(index, world);
         assertEquals(-1, find(index, world).blockX);
     }
+    @Test public void cachedLookupSupportsModernNegativeWorldHeight() {
+        FakeWorld world = new FakeWorld() {
+            @Override public int minY() { return -64; }
+            @Override public int maxY() { return 320; }
+        };
+        world.plate(0,-40,3);
+        Vec3d origin = new Vec3d(.5,-40.5,.5);
+        PressurePlateIndex index = new PressurePlateIndex(); index.prepare(world,origin,8);
+        for(int i=0;!index.isReady() && i<100;i++)index.advance(world,8192,Long.MAX_VALUE);
+        assertTrue(index.isReady());
+        PlateSearch search=index.search(world,validator,origin,0,8,30);
+        assertTrue(search instanceof CachedPressurePlateSearch);
+        search.advance(8192,Long.MAX_VALUE);assertTrue(search.isDone());
+        assertEquals(-40,search.result().feet.y,0);
+    }
 }
