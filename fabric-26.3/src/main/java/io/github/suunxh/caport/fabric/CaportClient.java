@@ -28,6 +28,8 @@ public final class CaportClient implements ClientModInitializer {
     private ClientLevel previousWorld,searchWorld;
     private net.minecraft.client.player.LocalPlayer searchPlayer;
     private PlateSearch search;
+    private FabricWorldView searchView;
+    private float searchWidth,searchHeight;
     private Vec3d searchOrigin;
     private long ticks,searchStarted;
     private int smokeTicks;
@@ -49,7 +51,7 @@ public final class CaportClient implements ClientModInitializer {
                 .then(literal("hypixel-risk").executes(c->direct(c.getSource(),true,true))))));
         org.slf4j.LoggerFactory.getLogger("caport").info("caport 1.1.0 Fabric 26.3 initialized");
     }
-    private String address(Minecraft mc) { return mc.getConnection()==null ? "" : mc.getConnection().getServerData().ip; }
+    private String address(Minecraft mc) { return mc.getConnection()==null || mc.getConnection().getServerData()==null ? "" : mc.getConnection().getServerData().ip; }
     private int status(FabricClientCommandSource source) {
         commandMessage(source,"Mode: "+config.executionMode+". Hypixel risk opt-in: "+config.hypixelRiskAcknowledged+".");return 1;
     }
@@ -106,13 +108,16 @@ public final class CaportClient implements ClientModInitializer {
                 if(result.destination!=null)execute(result.destination,view,validator,mc);
                 else message(result.failure==BlockTargetService.Failure.UNSAFE ? "Unsafe destination." : "No loaded target block found within range.");
             } else {
-                searchWorld=mc.level;searchPlayer=mc.player;searchOrigin=vector(mc.player.position());searchStarted=ticks;
+                searchWorld=mc.level;searchPlayer=mc.player;searchView=view;searchOrigin=vector(mc.player.position());searchStarted=ticks;
+                searchWidth=mc.player.getBbWidth();searchHeight=mc.player.getBbHeight();
                 search=index.search(view,validator,searchOrigin,mc.player.getYRot(),config.plateRange,config.coneHalfAngle);
             }
         }
         if(search==null)return;
         if(!enabled || mc.level!=searchWorld || mc.player!=searchPlayer || ticks-searchStarted>200
-                || searchOrigin.distanceSquared(vector(mc.player.position()))>.25) {search=null;return;}
+                || searchOrigin.distanceSquared(vector(mc.player.position()))>.25
+                || mc.player.getBbWidth()!=searchWidth || mc.player.getBbHeight()!=searchHeight) {search=null;return;}
+        searchView.beginTick();
         search.advance(8192,2_000_000L);
         if(search.isDone()) {
             Destination d=search.result();search=null;
@@ -123,7 +128,9 @@ public final class CaportClient implements ClientModInitializer {
     private void execute(Destination d,FabricWorldView view,DestinationValidator validator,Minecraft mc) {
         Destination current=validator.standingOn(view,d.blockX,d.blockY,d.blockZ,d.pressurePlate);
         if(current==null || current.feet.distanceSquared(d.feet)>1e-10) {message("Unsafe destination: the target changed.");return;}
-        TeleportCommandFormatter.Formatted command=formatter.format(config.commandTemplate,d.feet,config.precision,config.integerOnly);
+        TeleportCommandFormatter.Formatted command;
+        try {command=formatter.format(config.commandTemplate,d.feet,config.precision,config.integerOnly);}
+        catch(IllegalArgumentException e) {message("Invalid command configuration.");return;}
         Vec3d p=command.coordinates;
         if(Vec3d.floor(p.x)!=d.blockX || Vec3d.floor(p.z)!=d.blockZ || !validator.isSafeAt(view,p)) {
             message("Unsafe destination after rounding. Use decimal coordinates or more precision.");return;

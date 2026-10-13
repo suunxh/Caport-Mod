@@ -17,6 +17,7 @@ public final class FabricWorldView implements WorldView {
     private LevelChunk cached;
     private int cachedX, cachedZ;
     public FabricWorldView(ClientLevel world,LocalPlayer player) { this.world=world;this.player=player; }
+    public void beginTick() { cached=null; }
     @Override public int minY() { return world.getMinY(); }
     @Override public int maxY() { return world.getMinY()+world.getHeight(); }
     @Override public boolean isLoaded(int x,int y,int z) { return y>=minY() && y<maxY() && world.hasChunk(x>>4,z>>4); }

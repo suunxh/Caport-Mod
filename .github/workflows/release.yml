@@ -39,7 +39,13 @@ jobs:
           ./gradlew setupDecompWorkspace build --no-daemon --max-workers=2
       - name: Build and test Fabric 26.3
         if: matrix.platform == 'fabric-26.3'
-        run: ./fabric-26.3/gradlew -p fabric-26.3 build --no-daemon --max-workers=2
+        run: |
+          if ! ./fabric-26.3/gradlew -p fabric-26.3 build --no-daemon --max-workers=2 > "$RUNNER_TEMP/fabric-build.log" 2>&1; then
+            cat "$RUNNER_TEMP/fabric-build.log"
+            python3 tools/ci-error.py "$RUNNER_TEMP/fabric-build.log"
+            exit 1
+          fi
+          cat "$RUNNER_TEMP/fabric-build.log"
       - name: Start the Fabric development client and reach the title screen
         if: matrix.platform == 'fabric-26.3'
         env:
@@ -47,7 +53,7 @@ jobs:
           LIBGL_ALWAYS_SOFTWARE: 'true'
           SDL_VIDEODRIVER: x11
         run: |
-          timeout 120s xvfb-run -a ./fabric-26.3/gradlew -p fabric-26.3 runClient --no-daemon --max-workers=2 > fabric-26.3/build/client-smoke.log 2>&1 || { cat fabric-26.3/build/client-smoke.log; exit 1; }
+          timeout 120s xvfb-run -a ./fabric-26.3/gradlew -p fabric-26.3 runClient --no-daemon --max-workers=2 > fabric-26.3/build/client-smoke.log 2>&1 || { cat fabric-26.3/build/client-smoke.log; python3 tools/ci-error.py fabric-26.3/build/client-smoke.log; exit 1; }
           rg -F 'caport client smoke: title screen reached' fabric-26.3/build/client-smoke.log
       - name: Upload the installable JAR
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
