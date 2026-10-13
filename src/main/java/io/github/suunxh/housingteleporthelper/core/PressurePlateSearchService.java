@@ -1,7 +1,7 @@
 package io.github.suunxh.housingteleporthelper.core;
 
 /** Bounded incremental scan with immutable position/yaw snapshot. No per-tick idle scan. */
-public final class PressurePlateSearchService {
+public final class PressurePlateSearchService implements PlateSearch {
     private final WorldView world;
     private final DestinationValidator validator;
     private final Vec3d origin;
@@ -36,17 +36,17 @@ public final class PressurePlateSearchService {
                 double horizontalSquared = dx * dx + dz * dz;
                 if (horizontalSquared < 1e-12 || horizontalSquared > radiusSquared
                         || !inCone(dx, dz, horizontalSquared)
-                        || !world.isLoaded(x, Math.max(0, Math.min(255, Vec3d.floor(origin.y))), z)) {
+                        || !world.isLoaded(x, Math.max(world.minY(), Math.min(world.maxY() - 1, Vec3d.floor(origin.y))), z)) {
                     nextColumn(); continue;
                 }
                 double verticalReach = Math.sqrt(radiusSquared - horizontalSquared);
-                y = Math.max(1, (int) Math.ceil(origin.y - verticalReach - 0.25));
-                maxY = Math.min(255, Vec3d.floor(origin.y + verticalReach));
+                y = Math.max(world.minY() + 1, (int) Math.ceil(origin.y - verticalReach - 0.25));
+                maxY = Math.min(world.maxY() - 1, Vec3d.floor(origin.y + verticalReach));
                 columnReady = true;
             }
             if (y > maxY) { nextColumn(); continue; }
             if (!world.isLoaded(x, y, z)) { nextColumn(); continue; }
-            if (world.isSectionEmpty(x, y, z)) { y = (y / 16 + 1) * 16; continue; }
+            if (world.isSectionEmpty(x, y, z)) { y = ((y >> 4) + 1) * 16; continue; }
             int candidateY = y++;
             if (!world.isPressurePlate(x, candidateY, z)) continue;
             Destination candidate = validator.standingOn(world, x, candidateY, z, true);

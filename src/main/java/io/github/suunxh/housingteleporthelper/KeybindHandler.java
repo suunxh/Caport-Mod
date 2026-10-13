@@ -20,7 +20,9 @@ public final class KeybindHandler {
     private final CommandExecutionService execution;
     private final PressGate gate = new PressGate();
     private final BlockTargetService targetService = new BlockTargetService();
-    private PressurePlateSearchService search;
+    private PlateSearch search;
+    private final PressurePlateIndex plateIndex = new PressurePlateIndex();
+    private PlateCacheTracker cacheTracker;
     private WorldClient searchWorld, previousWorld;
     private EntityPlayerSP searchPlayer;
     private MinecraftWorldView searchView;
@@ -37,8 +39,18 @@ public final class KeybindHandler {
         if (event.phase != TickEvent.Phase.END) return;
         ticks++;
         Minecraft mc = Minecraft.getMinecraft();
-        if (mc.theWorld != previousWorld) { cancelSearch(); execution.reset(); previousWorld = mc.theWorld; }
+        if (mc.theWorld != previousWorld) {
+            cancelSearch(); execution.reset(); plateIndex.clear();
+            if (cacheTracker != null) cacheTracker.close();
+            cacheTracker = mc.theWorld == null ? null : new PlateCacheTracker(mc.theWorld, plateIndex);
+            previousWorld = mc.theWorld;
+        }
         boolean enabled = mc.thePlayer != null && mc.theWorld != null && mc.currentScreen == null && mc.inGameHasFocus;
+        if (mc.thePlayer != null && mc.theWorld != null && search == null) {
+            MinecraftWorldView cacheView = new MinecraftWorldView(mc.theWorld, mc.thePlayer);
+            plateIndex.prepare(cacheView, new Vec3d(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ), config.plateRange);
+            plateIndex.advance(cacheView, 8192, 2_000_000L);
+        }
         // Drain vanilla press counters, then use physical rising edges to prevent held-key repeat.
         while (targetKey.isPressed()) { }
         while (plateKey.isPressed()) { }
@@ -63,7 +75,7 @@ public final class KeybindHandler {
                 searchWorld = mc.theWorld; searchPlayer = mc.thePlayer; searchView = view; searchValidator = validator;
                 searchOrigin = new Vec3d(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ);
                 searchStarted = ticks;
-                search = new PressurePlateSearchService(view, validator, searchOrigin, mc.thePlayer.rotationYaw,
+                search = plateIndex.search(view, validator, searchOrigin, mc.thePlayer.rotationYaw,
                         config.plateRange, config.coneHalfAngle);
             }
         }

@@ -131,3 +131,34 @@ Validated on 2026-10-10 with the same Java 8 / Forge toolchain:
   commands, including hostname normalization and a Hypixel-looking unrelated host.
 - Minecraft's Controls code saves key changes in `options.txt`; caport keeps its
   existing keybinding identifiers. No live Hypixel testing was performed.
+
+## caport 1.1.0 checks
+
+Validated on 2026-10-13:
+
+- Forge 1.8.9: **86 tests passed**, no failures, errors, or skips (78 shared core
+  tests and 8 Forge configuration tests).
+- Fabric 26.3: **80 tests passed**, no failures, errors, or skips (the same 78 core
+  tests and 2 Fabric configuration tests), using Java 25, Fabric Loader 0.19.5,
+  Fabric API 0.162.0+26.3, Fabric Loom 1.18.4, and Gradle 9.7.1.
+- Cache tests verify nearest/cone/tie parity, budgeted warming, newly added plates,
+  removals, changed clearance, unload/reload, world reset, and negative world Y.
+  A warm query on the representative three-plate fixture examines at most two
+  eligible plate candidates instead of rescanning all block positions.
+- Surface tests cover closed trapdoors at both heights, all four open orientations,
+  fences, walls, panes, obstructed narrow surfaces, and modern world height limits.
+- Real Forge singleplayer direct-mode checks confirmed G teleports to a closed
+  bottom trapdoor at `(0.5,5.1875,5.5)`, an open trapdoor's upper edge at
+  `(0.5,6,5.90625)`, a fence and cobblestone wall at `(0.5,6.5,5.5)`, and a glass
+  pane at `(0.5,6,5.5)`. The integrated server confirmed one command per action.
+- H found a newly placed nearer plate at `(0.5,4,3.5)`, then found the existing
+  farther plate at `(0.5,4,8.5)` after the nearer one was removed. Manual mode was
+  restored before the test client was closed.
+- Fabric startup is gated in CI by actual caport initialization and reaching the
+  title screen on a software-rendered Xorg/EGL display. First-launch onboarding
+  is handled only under the opt-in smoke-test flag. No Fabric gameplay or live
+  Hypixel multiplayer test is claimed by this startup check.
+
+Installation prerequisites and platform-specific JAR names are in the README;
+build/toolchain details are in `docs/BUILDING.md`. Server-side permission or
+coordinate rejection remains outside the client's control.

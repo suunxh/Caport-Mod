@@ -21,7 +21,7 @@ public final class BlockTargetService {
         double stepZ = dz == 0 ? Double.POSITIVE_INFINITY : Math.abs(1 / dz);
         double entered = 0;
         while (entered <= range + 1e-9) {
-            if (y < 0 || y >= 256) return new Result(null, Failure.NO_TARGET);
+            if (y < world.minY() || y >= world.maxY()) return new Result(null, Failure.NO_TARGET);
             if (!world.isGeometryLoaded(x, y, z)) return new Result(null, Failure.UNLOADED);
             Vec3d hit = world.rayHit(x, y, z, eye, end);
             if (hit != null && eye.distanceSquared(hit) <= range * range + 1e-7) {
