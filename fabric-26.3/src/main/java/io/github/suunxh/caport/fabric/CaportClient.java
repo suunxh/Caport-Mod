@@ -85,13 +85,14 @@ public final class CaportClient implements ClientModInitializer {
             return (SDLMouse.SDL_GetMouseState((FloatBuffer)null,(FloatBuffer)null) & (1 << (key.getValue()-1)))!=0;
         return InputConstants.isKeyDown(key.getValue());
     }
+    private void cancelSearch() { search=null;searchWorld=null;searchPlayer=null;searchView=null;searchOrigin=null; }
     private void tick(Minecraft mc) {
         ticks++;
         if(Boolean.getBoolean("caport.smokeTest") && mc.gui.screen() instanceof net.minecraft.client.gui.screens.TitleScreen
                 && mc.gui.overlay()==null && ++smokeTicks>=5) {
             org.slf4j.LoggerFactory.getLogger("caport").info("caport client smoke: title screen reached");mc.stop();return;
         }
-        if(mc.level!=previousWorld) {search=null;index.clear();delivery.reset();previousWorld=mc.level;}
+        if(mc.level!=previousWorld) {cancelSearch();index.clear();delivery.reset();previousWorld=mc.level;}
         boolean enabled=mc.player!=null && mc.level!=null && mc.gui.screen()==null && mc.isWindowActive();
         while(targetKey.consumeClick()) { } while(plateKey.consumeClick()) { }
         PressGate.Presses presses=gate.update(code(targetKey),code(plateKey),down(targetKey),down(plateKey),enabled);
@@ -99,9 +100,9 @@ public final class CaportClient implements ClientModInitializer {
             FabricWorldView view=new FabricWorldView(mc.level,mc.player);
             index.prepare(view,vector(mc.player.position()),config.plateRange);index.advance(view,8192,2_000_000L);
         }
-        if(presses.conflict) {search=null;message("Actions share a key. Assign different keys in Controls.");}
+        if(presses.conflict) {cancelSearch();message("Actions share a key. Assign different keys in Controls.");}
         if(presses.target || presses.plate) {
-            search=null;FabricWorldView view=new FabricWorldView(mc.level,mc.player);
+            cancelSearch();FabricWorldView view=new FabricWorldView(mc.level,mc.player);
             DestinationValidator validator=new DestinationValidator(mc.player.getBbWidth(),mc.player.getBbHeight());
             if(presses.target) {
                 BlockTargetService.Result result=new BlockTargetService().target(view,vector(mc.player.getEyePosition()),vector(mc.player.getViewVector(1)),config.targetRange,validator);
@@ -116,11 +117,11 @@ public final class CaportClient implements ClientModInitializer {
         if(search==null)return;
         if(!enabled || mc.level!=searchWorld || mc.player!=searchPlayer || ticks-searchStarted>200
                 || searchOrigin.distanceSquared(vector(mc.player.position()))>.25
-                || mc.player.getBbWidth()!=searchWidth || mc.player.getBbHeight()!=searchHeight) {search=null;return;}
+                || mc.player.getBbWidth()!=searchWidth || mc.player.getBbHeight()!=searchHeight) {cancelSearch();return;}
         searchView.beginTick();
         search.advance(8192,2_000_000L);
         if(search.isDone()) {
-            Destination d=search.result();search=null;
+            Destination d=search.result();cancelSearch();
             if(d==null)message("No pressure plate found in range and facing cone.");
             else execute(d,new FabricWorldView(mc.level,mc.player),new DestinationValidator(mc.player.getBbWidth(),mc.player.getBbHeight()),mc);
         }
