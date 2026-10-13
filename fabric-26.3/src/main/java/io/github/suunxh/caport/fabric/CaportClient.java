@@ -15,7 +15,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.phys.Vec3;
 import org.lwjgl.sdl.SDLMouse;
 import java.nio.FloatBuffer;
-import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
+import static net.fabricmc.fabric.api.client.command.v2.ClientCommands.literal;
 
 public final class CaportClient implements ClientModInitializer {
     public static CaportClient instance;
@@ -40,8 +40,8 @@ public final class CaportClient implements ClientModInitializer {
         targetKey=KeyMappingHelper.registerKeyMapping(new KeyMapping("key.caport.target",InputConstants.Type.KEYBOARD,InputConstants.KEY_G,category));
         plateKey=KeyMappingHelper.registerKeyMapping(new KeyMapping("key.caport.plate",InputConstants.Type.KEYBOARD,InputConstants.KEY_H,category));
         ClientTickEvents.END_CLIENT_TICK.register(this::tick);
-        ClientChunkEvents.CHUNK_LOAD.register((world,chunk)-> { if(world==Minecraft.getInstance().level)index.invalidateChunk(chunk.getPos().x,chunk.getPos().z); });
-        ClientChunkEvents.CHUNK_UNLOAD.register((world,chunk)-> { if(world==Minecraft.getInstance().level)index.invalidateChunk(chunk.getPos().x,chunk.getPos().z); });
+        ClientChunkEvents.CHUNK_LOAD.register((world,chunk)-> { if(world==Minecraft.getInstance().level)index.invalidateChunk(chunk.getPos().x(),chunk.getPos().z()); });
+        ClientChunkEvents.CHUNK_UNLOAD.register((world,chunk)-> { if(world==Minecraft.getInstance().level)index.invalidateChunk(chunk.getPos().x(),chunk.getPos().z()); });
         ClientCommandRegistrationCallback.EVENT.register((dispatcher,context)->dispatcher.register(literal("caport")
             .executes(c->status(c.getSource()))
             .then(literal("status").executes(c->status(c.getSource())))
