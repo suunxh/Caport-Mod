@@ -19,8 +19,10 @@ jobs:
         include:
           - platform: forge-1.8.9
             java: '8'
+            jar_path: build/libs/caport-forge-1.8.9-*.jar
           - platform: fabric-26.3
             java: '25'
+            jar_path: fabric-26.3/build/libs/caport-fabric-26.3-*.jar
     env:
       GRADLE_USER_HOME: ${{ github.workspace }}/.gradle-cache
     steps:
@@ -59,9 +61,7 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: ${{ matrix.platform }}
-          path: |
-            build/libs/caport-${{ matrix.platform }}-*.jar
-            fabric-26.3/build/libs/caport-${{ matrix.platform }}-*.jar
+          path: ${{ matrix.jar_path }}
           if-no-files-found: error
       - name: Upload Fabric startup log
         if: always() && matrix.platform == 'fabric-26.3'

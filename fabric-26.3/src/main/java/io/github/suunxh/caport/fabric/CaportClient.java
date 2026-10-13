@@ -68,7 +68,7 @@ public final class CaportClient implements ClientModInitializer {
     private void commandMessage(FabricClientCommandSource source,String text) { source.sendFeedback(Component.literal("[caport] "+text)); }
     private void message(String text) {
         Minecraft mc=Minecraft.getInstance();
-        if(config.feedback && mc.player!=null)mc.gui.hud.getChat().addMessage(Component.literal("[caport] "+text),null,net.minecraft.client.multiplayer.chat.GuiMessageSource.SYSTEM_CLIENT,net.minecraft.client.multiplayer.chat.GuiMessageTag.system());
+        if(config.feedback && mc.player!=null)mc.gui.hud.getChat().addClientSystemMessage(Component.literal("[caport] "+text));
     }
     public void blockChanged(ClientLevel world,int x,int y,int z) {
         if(world==Minecraft.getInstance().level)index.invalidate(x,y,z);
