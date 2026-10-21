@@ -16,17 +16,14 @@ public final class CommandExecutionService {
         final Minecraft mc = Minecraft.getMinecraft();
         if (mc.thePlayer == null || mc.theWorld == null || mc.currentScreen != null) return;
         // Revalidate the block and body after an incremental search completes.
-        Destination current = validator.standingOn(world, destination.blockX, destination.blockY,
-                destination.blockZ, destination.pressurePlate);
-        if (current == null || current.feet.distanceSquared(destination.feet) > 1e-10) {
+        if (!validator.unchanged(world, destination)) {
             feedback.show("Unsafe destination: the target changed."); return;
         }
         TeleportCommandFormatter.Formatted command;
-        try { command = formatter.format(config.commandTemplate, destination.feet, config.precision, config.integerOnly); }
+        try { command = formatter.format(config.commandTemplate, destination, config.precision, config.integerOnly); }
         catch (IllegalArgumentException e) { feedback.show("Invalid command configuration."); return; }
         Vec3d coordinates = command.coordinates;
-        if (Vec3d.floor(coordinates.x) != destination.blockX || Vec3d.floor(coordinates.z) != destination.blockZ
-                || !validator.isSafeAt(world, coordinates)) {
+        if (!validator.acceptsCoordinates(world, destination, coordinates)) {
             feedback.show("Unsafe destination after coordinate rounding. Use decimal coordinates or more precision."); return;
         }
         ServerData server = mc.getCurrentServerData();

@@ -21,9 +21,20 @@ public final class TeleportCommandFormatter {
         return true;
     }
     public Formatted format(String template, Vec3d destination, int precision, boolean integerOnly) {
+        return format(template, destination, precision, precision, integerOnly);
+    }
+    public Formatted format(String template, Destination destination, int precision, boolean integerOnly) {
+        // Keep exact fractional standing heights (notably 1/64-block lily pads).
+        // Horizontal precision and the explicit integer-only setting are retained.
+        int yPrecision = precision;
+        if (destination.kind == Destination.Kind.STANDING && Double.isFinite(destination.feet.y))
+            yPrecision = Math.max(precision, Math.min(8, BigDecimal.valueOf(destination.feet.y).stripTrailingZeros().scale()));
+        return format(template, destination.feet, precision, yPrecision, integerOnly);
+    }
+    private Formatted format(String template, Vec3d destination, int precision, int yPrecision, boolean integerOnly) {
         if (!validTemplate(template) || precision < 0 || precision > 8) throw new IllegalArgumentException("Invalid command configuration");
         String x = number(destination.x, precision, integerOnly);
-        String y = number(destination.y, precision, integerOnly);
+        String y = number(destination.y, yPrecision, integerOnly);
         String z = number(destination.z, precision, integerOnly);
         String command = template.replace("{x}", x).replace("{y}", y).replace("{z}", z);
         if (command.length() > 100) throw new IllegalArgumentException("Command exceeds Minecraft 1.8.9 chat limit");

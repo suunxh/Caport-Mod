@@ -4,6 +4,7 @@ import io.github.suunxh.housingteleporthelper.core.*;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.*;
@@ -40,6 +41,15 @@ public final class FabricWorldView implements WorldView {
         LevelChunk c=chunk(x,y,z);
         return c!=null && c.getSection(world.getSectionIndex(y)).getBlockState(x&15,y&15,z&15).getBlock() instanceof BasePressurePlateBlock;
     }
+    @Override public boolean isClimbable(int x,int y,int z) {
+        return isGeometryLoaded(x,y,z) && world.getBlockState(new BlockPos(x,y,z)).is(BlockTags.CLIMBABLE);
+    }
+    @Override public boolean isTargetDecoration(int x,int y,int z) {
+        if(!isGeometryLoaded(x,y,z))return false;
+        BlockState state=world.getBlockState(new BlockPos(x,y,z));Block block=state.getBlock();
+        return state.is(BlockTags.FLOWERS) || block==Blocks.SHORT_GRASS || block==Blocks.TALL_GRASS
+            || block==Blocks.FERN || block==Blocks.LARGE_FERN || block==Blocks.DEAD_BUSH;
+    }
     @Override public List<Box> collisionBoxes(int x,int y,int z) {
         if(!isGeometryLoaded(x,y,z))return Collections.emptyList();
         BlockPos pos=new BlockPos(x,y,z);List<Box> result=new ArrayList<>();
@@ -51,7 +61,7 @@ public final class FabricWorldView implements WorldView {
         for(int x=Vec3d.floor(b.minX)-1;x<=Vec3d.floor(b.maxX)+1;x++)
             for(int z=Vec3d.floor(b.minZ)-1;z<=Vec3d.floor(b.maxZ)+1;z++)if(!world.hasChunk(x>>4,z>>4))return false;
         AABB box=new AABB(b.minX,b.minY,b.minZ,b.maxX,b.maxY,b.maxZ);
-        if(!world.noCollision(player,box) || world.containsAnyLiquid(box))return false;
+        if(world.getBlockCollisions(player,box).iterator().hasNext() || world.containsAnyLiquid(box))return false;
         for(int x=Vec3d.floor(b.minX);x<=Vec3d.floor(b.maxX);x++)for(int z=Vec3d.floor(b.minZ);z<=Vec3d.floor(b.maxZ);z++)
             for(int y=Math.max(minY(),Vec3d.floor(b.minY));y<=Math.min(maxY()-1,Vec3d.floor(b.maxY));y++) {
                 Block block=world.getBlockState(new BlockPos(x,y,z)).getBlock();

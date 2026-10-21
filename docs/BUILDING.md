@@ -10,7 +10,7 @@ python3 tools/fetch-assets.py
 ./gradlew setupDecompWorkspace build --max-workers=2
 ```
 
-Output: `build/libs/caport-forge-1.8.9-1.1.0.jar`.
+Output: `build/libs/caport-forge-1.8.9-1.2.0.jar`.
 `./gradlew runClient` starts the Forge development client.
 
 ## Fabric 26.3
@@ -25,7 +25,7 @@ Use a Java 25 JDK and the separate Fabric wrapper:
 The build pins Fabric Loom 1.18.4, Loader 0.19.5, Fabric API 0.162.0+26.3,
 and Gradle 9.7.1. Minecraft 26.3 is distributed with official readable names;
 no legacy ForgeGradle or Yarn mapping configuration is used.
-Output: `fabric-26.3/build/libs/caport-fabric-26.3-1.1.0.jar`.
+Output: `fabric-26.3/build/libs/caport-fabric-26.3-1.2.0.jar`.
 The shared `core` sources and regression tests are compiled in both projects;
 Forge lifecycle/configuration classes are excluded from the Fabric JAR.
 

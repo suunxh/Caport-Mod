@@ -25,8 +25,21 @@ public final class BlockTargetService {
             if (!world.isGeometryLoaded(x, y, z)) return new Result(null, Failure.UNLOADED);
             Vec3d hit = world.rayHit(x, y, z, eye, end);
             if (hit != null && eye.distanceSquared(hit) <= range * range + 1e-7) {
-                Destination destination = validator.standingOn(world, x, y, z, world.isPressurePlate(x, y, z));
-                return new Result(destination, destination == null ? Failure.UNSAFE : null);
+                // Only decorative plants are transparent to targeting. Never pass
+                // through a solid first hit to select a different block behind it.
+                if (!world.isTargetDecoration(x, y, z)) {
+                    Destination destination = validator.targetBlock(world, x, y, z);
+                    return new Result(destination, destination == null ? Failure.UNSAFE : null);
+                }
+                // Aiming at a flower/grass stalk means its supporting ground,
+                // rather than a distant ground tile reached by a shallow ray.
+                for (int below = y - 1; below >= y - 2 && below >= world.minY(); below--) {
+                    if (!world.isGeometryLoaded(x, below, z)) return new Result(null, Failure.UNLOADED);
+                    if (world.isTargetDecoration(x, below, z)) continue;
+                    Destination ground = validator.standingOn(world, x, below, z, world.isPressurePlate(x, below, z));
+                    if (ground != null) return new Result(ground, null);
+                    break;
+                }
             }
             entered = Math.min(tx, Math.min(ty, tz));
             if (tx <= entered) { x += sx; tx += stepX; }

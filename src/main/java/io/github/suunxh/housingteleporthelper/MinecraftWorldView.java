@@ -4,6 +4,9 @@ import io.github.suunxh.housingteleporthelper.core.Box;
 import io.github.suunxh.housingteleporthelper.core.Vec3d;
 import io.github.suunxh.housingteleporthelper.core.WorldView;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockBush;
+import net.minecraft.block.BlockLadder;
+import net.minecraft.block.BlockVine;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.multiplayer.WorldClient;
@@ -58,6 +61,16 @@ public final class MinecraftWorldView implements WorldView {
         return block == Blocks.stone_pressure_plate || block == Blocks.wooden_pressure_plate
                 || block == Blocks.light_weighted_pressure_plate || block == Blocks.heavy_weighted_pressure_plate;
     }
+    @Override public boolean isClimbable(int x, int y, int z) {
+        if (!isGeometryLoaded(x, y, z)) return false;
+        Block block = world.getBlockState(new BlockPos(x, y, z)).getBlock();
+        return block instanceof BlockLadder || block instanceof BlockVine;
+    }
+    @Override public boolean isTargetDecoration(int x, int y, int z) {
+        if (!isGeometryLoaded(x, y, z)) return false;
+        Block block = world.getBlockState(new BlockPos(x, y, z)).getBlock();
+        return block instanceof BlockBush && block != Blocks.waterlily;
+    }
     @Override public List<Box> collisionBoxes(int x, int y, int z) {
         if (!isLoaded(x, y, z) || !neighborChunksLoaded(x, z)) return Collections.emptyList();
         BlockPos pos = new BlockPos(x, y, z);
@@ -78,7 +91,13 @@ public final class MinecraftWorldView implements WorldView {
             for (int z = minZ; z <= maxZ; z++)
                 if (!isLoaded(x, Math.max(0, Vec3d.floor(bounds.minY)), z)) return false;
         AxisAlignedBB box = convert(bounds);
-        if (!world.getCollidingBoundingBoxes(player, box).isEmpty() || world.isAnyLiquid(box)) return false;
+        if (world.isAnyLiquid(box)) return false;
+        // Entities do not obstruct block targeting or a command destination.
+        // Check block geometry only; the server still applies normal entity physics.
+        for (int x = Vec3d.floor(bounds.minX) - 1; x <= Vec3d.floor(bounds.maxX) + 1; x++)
+            for (int z = Vec3d.floor(bounds.minZ) - 1; z <= Vec3d.floor(bounds.maxZ) + 1; z++)
+                for (int y = Math.max(0, Vec3d.floor(bounds.minY) - 1); y <= Math.min(255, Vec3d.floor(bounds.maxY)); y++)
+                    for (Box shape : collisionBoxes(x, y, z)) if (shape.intersects(bounds)) return false;
         for (int x = Vec3d.floor(bounds.minX); x <= Vec3d.floor(bounds.maxX); x++)
             for (int z = Vec3d.floor(bounds.minZ); z <= Vec3d.floor(bounds.maxZ); z++)
                 for (int y = Vec3d.floor(bounds.minY); y <= Math.min(255, Vec3d.floor(bounds.maxY)); y++)

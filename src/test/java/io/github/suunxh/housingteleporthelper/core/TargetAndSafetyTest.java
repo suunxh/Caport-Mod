@@ -21,10 +21,14 @@ public class TargetAndSafetyTest {
     @Test public void includesExactMaximumRayDistance() { assertNotNull(aim(new FakeWorld().solid(0, 64, 5), 4.5).destination); }
     @Test public void excludesBeyondRayDistance() { assertEquals(BlockTargetService.Failure.NO_TARGET, aim(new FakeWorld().solid(0, 64, 5), 4.49).failure); }
     @Test public void unloadedRayStops() { assertEquals(BlockTargetService.Failure.UNLOADED, aim(new FakeWorld().unload(0, 1), 100).failure); }
-    @Test public void obstructedStandingSpaceRejected() { assertEquals(BlockTargetService.Failure.UNSAFE, aim(new FakeWorld().solid(0, 64, 5).solid(0, 66, 5), 100).failure); }
-    @Test public void firstUnsafeHitDoesNotTargetThroughWall() {
+    @Test public void obstructedFullBlockUsesEmbeddedDestination() {
+        Destination d = aim(new FakeWorld().solid(0, 64, 5).solid(0, 66, 5), 100).destination;
+        assertNotNull(d); assertEquals(Destination.Kind.EMBEDDED, d.kind); assertEquals(64, d.feet.y, 0);
+    }
+    @Test public void embeddedFirstHitDoesNotTargetThroughWall() {
         FakeWorld w = new FakeWorld().solid(0, 64, 2).solid(0, 65, 2).solid(0, 64, 5);
-        assertEquals(BlockTargetService.Failure.UNSAFE, aim(w, 100).failure);
+        Destination d = aim(w, 100).destination;
+        assertNotNull(d); assertEquals(2, d.blockZ); assertEquals(Destination.Kind.EMBEDDED, d.kind);
     }
     @Test public void noTarget() { assertEquals(BlockTargetService.Failure.NO_TARGET, aim(new FakeWorld(), 100).failure); }
     @Test public void zeroLookIsSafe() { assertNull(target.target(new FakeWorld(), new Vec3d(0, 64, 0), new Vec3d(0, 0, 0), 100, validator).destination); }

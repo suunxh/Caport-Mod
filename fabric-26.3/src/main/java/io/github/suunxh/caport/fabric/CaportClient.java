@@ -25,6 +25,7 @@ public final class CaportClient implements ClientModInitializer {
     private final PressurePlateIndex index=new PressurePlateIndex();
     private final CommandDelivery delivery=new CommandDelivery();
     private final TeleportCommandFormatter formatter=new TeleportCommandFormatter();
+    private final WorldJoinNotice joinNotice=new WorldJoinNotice();
     private ClientLevel previousWorld,searchWorld;
     private net.minecraft.client.player.LocalPlayer searchPlayer;
     private PlateSearch search;
@@ -38,8 +39,8 @@ public final class CaportClient implements ClientModInitializer {
         instance=this;
         config=new FabricConfiguration(FabricLoader.getInstance().getConfigDir().resolve("caport.properties"));
         KeyMapping.Category category=KeyMapping.Category.register(Identifier.fromNamespaceAndPath("caport","controls"));
-        targetKey=KeyMappingHelper.registerKeyMapping(new KeyMapping("key.caport.target",InputConstants.Type.KEYBOARD,InputConstants.KEY_G,category));
-        plateKey=KeyMappingHelper.registerKeyMapping(new KeyMapping("key.caport.plate",InputConstants.Type.KEYBOARD,InputConstants.KEY_H,category));
+        targetKey=KeyMappingHelper.registerKeyMapping(new KeyMapping("key.caport.target",InputConstants.Type.KEYBOARD,InputConstants.KEY_H,category));
+        plateKey=KeyMappingHelper.registerKeyMapping(new KeyMapping("key.caport.plate",InputConstants.Type.KEYBOARD,InputConstants.KEY_Z,category));
         ClientTickEvents.END_CLIENT_TICK.register(this::tick);
         ClientChunkEvents.CHUNK_LOAD.register((world,chunk)-> { if(world==Minecraft.getInstance().level)index.invalidateChunk(chunk.getPos().x(),chunk.getPos().z()); });
         ClientChunkEvents.CHUNK_UNLOAD.register((world,chunk)-> { if(world==Minecraft.getInstance().level)index.invalidateChunk(chunk.getPos().x(),chunk.getPos().z()); });
@@ -50,7 +51,7 @@ public final class CaportClient implements ClientModInitializer {
             .then(literal("direct").executes(c->direct(c.getSource(),false,false))
                 .then(literal("authorized").executes(c->direct(c.getSource(),true,false)))
                 .then(literal("hypixel-risk").executes(c->direct(c.getSource(),true,true))))));
-        org.slf4j.LoggerFactory.getLogger("caport").info("caport 1.1.0 Fabric 26.3 initialized");
+        org.slf4j.LoggerFactory.getLogger("caport").info("caport 1.2.0 Fabric 26.3 initialized");
     }
     private String address(Minecraft mc) { return mc.getConnection()==null || mc.getConnection().getServerData()==null ? "" : mc.getConnection().getServerData().ip; }
     private int status(FabricClientCommandSource source) {
@@ -89,6 +90,8 @@ public final class CaportClient implements ClientModInitializer {
     private void cancelSearch() { search=null;searchWorld=null;searchPlayer=null;searchView=null;searchOrigin=null; }
     private void tick(Minecraft mc) {
         ticks++;
+        if(joinNotice.shouldShow(mc.level,mc.player!=null))
+            message("Mod successfully loaded. /caport status shows your current mode.");
         if(Boolean.getBoolean("caport.smokeTest")) {
             if(mc.gui.screen()!=null && mc.gui.screen().getClass()!=smokeScreen) {
                 smokeScreen=mc.gui.screen().getClass();
@@ -135,13 +138,12 @@ public final class CaportClient implements ClientModInitializer {
         }
     }
     private void execute(Destination d,FabricWorldView view,DestinationValidator validator,Minecraft mc) {
-        Destination current=validator.standingOn(view,d.blockX,d.blockY,d.blockZ,d.pressurePlate);
-        if(current==null || current.feet.distanceSquared(d.feet)>1e-10) {message("Unsafe destination: the target changed.");return;}
+        if(!validator.unchanged(view,d)) {message("Unsafe destination: the target changed.");return;}
         TeleportCommandFormatter.Formatted command;
-        try {command=formatter.format(config.commandTemplate,d.feet,config.precision,config.integerOnly);}
+        try {command=formatter.format(config.commandTemplate,d,config.precision,config.integerOnly);}
         catch(IllegalArgumentException e) {message("Invalid command configuration.");return;}
         Vec3d p=command.coordinates;
-        if(Vec3d.floor(p.x)!=d.blockX || Vec3d.floor(p.z)!=d.blockZ || !validator.isSafeAt(view,p)) {
+        if(!validator.acceptsCoordinates(view,d,p)) {
             message("Unsafe destination after rounding. Use decimal coordinates or more precision.");return;
         }
         boolean allowed=ExecutionPolicy.directAllowed(config.directAuthorized,mc.hasSingleplayerServer(),address(mc),config.directAllowedServers,config.hypixelRiskAcknowledged);

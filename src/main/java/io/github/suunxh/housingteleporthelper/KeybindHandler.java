@@ -13,13 +13,14 @@ import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
 public final class KeybindHandler {
-    private final KeyBinding targetKey = new KeyBinding("key.housingteleporthelper.target", Keyboard.KEY_G, "key.categories.housingteleporthelper");
-    private final KeyBinding plateKey = new KeyBinding("key.housingteleporthelper.plate", Keyboard.KEY_H, "key.categories.housingteleporthelper");
+    private final KeyBinding targetKey = new KeyBinding("key.housingteleporthelper.target", Keyboard.KEY_H, "key.categories.housingteleporthelper");
+    private final KeyBinding plateKey = new KeyBinding("key.housingteleporthelper.plate", Keyboard.KEY_Z, "key.categories.housingteleporthelper");
     private final ModConfiguration config;
     private final ChatFeedback feedback;
     private final CommandExecutionService execution;
     private final PressGate gate = new PressGate();
     private final BlockTargetService targetService = new BlockTargetService();
+    private final WorldJoinNotice joinNotice = new WorldJoinNotice();
     private PlateSearch search;
     private final PressurePlateIndex plateIndex = new PressurePlateIndex();
     private PlateCacheTracker cacheTracker;
@@ -39,6 +40,8 @@ public final class KeybindHandler {
         if (event.phase != TickEvent.Phase.END) return;
         ticks++;
         Minecraft mc = Minecraft.getMinecraft();
+        if (joinNotice.shouldShow(mc.theWorld, mc.thePlayer != null))
+            feedback.show("Mod successfully loaded. /caport status shows your current mode.");
         if (mc.theWorld != previousWorld) {
             cancelSearch(); execution.reset(); plateIndex.clear();
             if (cacheTracker != null) cacheTracker.close();
@@ -59,7 +62,7 @@ public final class KeybindHandler {
         if (enabled && config.corrected && !configWarningShown) {
             feedback.show("Invalid command/configuration values were restored to safe defaults."); configWarningShown = true;
         }
-        if (presses.conflict) { cancelSearch(); feedback.show("G/H actions share a key. Assign different keys in Controls."); }
+        if (presses.conflict) { cancelSearch(); feedback.show("Actions share a key. Assign different keys in Controls."); }
         if (presses.target || presses.plate) {
             cancelSearch();
             MinecraftWorldView view = new MinecraftWorldView(mc.theWorld, mc.thePlayer);
