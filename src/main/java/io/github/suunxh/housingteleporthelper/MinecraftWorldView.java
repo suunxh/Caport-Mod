@@ -7,6 +7,9 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockBush;
 import net.minecraft.block.BlockLadder;
 import net.minecraft.block.BlockVine;
+import net.minecraft.block.BlockDoor;
+import net.minecraft.block.BlockRailBase;
+import net.minecraft.block.BlockTorch;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.multiplayer.WorldClient;
@@ -66,10 +69,22 @@ public final class MinecraftWorldView implements WorldView {
         Block block = world.getBlockState(new BlockPos(x, y, z)).getBlock();
         return block instanceof BlockLadder || block instanceof BlockVine;
     }
+    @Override public boolean isLadder(int x, int y, int z) {
+        return isGeometryLoaded(x, y, z) && world.getBlockState(new BlockPos(x, y, z)).getBlock() instanceof BlockLadder;
+    }
+    @Override public boolean isLowerDoor(int x, int y, int z) {
+        if (!isGeometryLoaded(x, y, z)) return false;
+        IBlockState state = world.getBlockState(new BlockPos(x, y, z));
+        return state.getBlock() instanceof BlockDoor && state.getValue(BlockDoor.HALF) == BlockDoor.EnumDoorHalf.LOWER;
+    }
+    @Override public boolean isCobweb(int x, int y, int z) {
+        return isGeometryLoaded(x, y, z) && world.getBlockState(new BlockPos(x, y, z)).getBlock() == Blocks.web;
+    }
     @Override public boolean isTargetDecoration(int x, int y, int z) {
         if (!isGeometryLoaded(x, y, z)) return false;
         Block block = world.getBlockState(new BlockPos(x, y, z)).getBlock();
-        return block instanceof BlockBush && block != Blocks.waterlily;
+        return (block instanceof BlockBush && block != Blocks.waterlily)
+                || block instanceof BlockRailBase || block instanceof BlockTorch;
     }
     @Override public List<Box> collisionBoxes(int x, int y, int z) {
         if (!isLoaded(x, y, z) || !neighborChunksLoaded(x, z)) return Collections.emptyList();

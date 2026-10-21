@@ -55,14 +55,15 @@ public class ExtendedTargetTest {
         BlockTargetService.Result r=new BlockTargetService().target(world,new Vec3d(.5,64.5,.5),new Vec3d(0,0,1),100,validator);
         assertNull(r.destination); assertEquals(BlockTargetService.Failure.UNLOADED,r.failure);
     }
-    @Test public void ladderTargetsClimbableSpaceRatherThanItsTopEdge() {
+    @Test public void attachedLadderTargetsItsStandingEdgeRatherThanClimbingSpace() {
         FakeWorld world=new FakeWorld().solid(0,64,1).solid(0,65,1);
         Box ladder=new Box(0,64,.875,1,65,1);
         world.climbable(0,64,0,ladder).shape(0,64,0,ladder);
+        world.ladders.add(world.key(0,64,0));
         Destination d=aim(world,new Vec3d(.5,64.5,-3),new Vec3d(0,0,1));
-        assertNotNull(d); assertEquals(Destination.Kind.CLIMBABLE,d.kind);
-        assertEquals(64,d.feet.y,0); assertEquals(.5,d.feet.z,0);
-        assertFalse(validator.isSafeAt(world,d.feet)); // No floor is intentional here.
+        assertNotNull(d); assertEquals(Destination.Kind.STANDING,d.kind);
+        assertEquals(65,d.feet.y,0); assertTrue(d.feet.z > .5);
+        assertTrue(validator.isSafeAt(world,d.feet));
         assertTrue(validator.unchanged(world,d)); assertTrue(validator.acceptsCoordinates(world,d,formatted(d)));
     }
     @Test public void vineTargetsItsOwnVoxelBesideSupportingWall() {

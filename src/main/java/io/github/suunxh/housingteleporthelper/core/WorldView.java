@@ -11,6 +11,9 @@ public interface WorldView {
     boolean isSectionEmpty(int x, int y, int z);
     boolean isPressurePlate(int x, int y, int z);
     default boolean isClimbable(int x, int y, int z) { return false; }
+    default boolean isLadder(int x, int y, int z) { return false; }
+    default boolean isLowerDoor(int x, int y, int z) { return false; }
+    default boolean isCobweb(int x, int y, int z) { return false; }
     default boolean isTargetDecoration(int x, int y, int z) { return false; }
     List<Box> collisionBoxes(int x, int y, int z);
     boolean hasClearance(Box playerBounds);

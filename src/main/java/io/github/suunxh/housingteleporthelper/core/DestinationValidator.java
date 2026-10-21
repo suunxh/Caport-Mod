@@ -10,6 +10,16 @@ public final class DestinationValidator {
     /** Block targeting may also select a climbable, or the first solid wall itself. */
     public Destination targetBlock(WorldView world, int x, int y, int z) {
         if (!world.isGeometryLoaded(x, y, z)) return null;
+        // Ladders have a real upper edge; vines do not. The existing narrow
+        // surface offsets keep the player's body clear of an attached wall.
+        if (world.isLadder(x, y, z)) return standingOn(world, x, y, z, false);
+        // Both door halves select the upper half's actual collision surface.
+        if (world.isLowerDoor(x, y, z)) return standingOn(world, x, y + 1, z, false);
+        if (world.isCobweb(x, y, z)) {
+            Vec3d feet = new Vec3d(x + 0.5, y, z + 0.5);
+            return hasBodyClearance(world, feet)
+                    ? new Destination(x, y, z, false, feet, Destination.Kind.COBWEB) : null;
+        }
         if (world.isClimbable(x, y, z)) {
             Vec3d feet = new Vec3d(x + 0.5, y, z + 0.5);
             return hasBodyClearance(world, feet)
@@ -37,6 +47,10 @@ public final class DestinationValidator {
         if (!Double.isFinite(feet.x) || !Double.isFinite(feet.y) || !Double.isFinite(feet.z)
                 || Vec3d.floor(feet.x) != destination.blockX || Vec3d.floor(feet.z) != destination.blockZ) return false;
         switch (destination.kind) {
+            case COBWEB:
+                return Vec3d.floor(feet.y) == destination.blockY
+                        && world.isCobweb(destination.blockX, destination.blockY, destination.blockZ)
+                        && hasBodyClearance(world, feet);
             case CLIMBABLE:
                 return Vec3d.floor(feet.y) == destination.blockY
                         && world.isClimbable(destination.blockX, destination.blockY, destination.blockZ)

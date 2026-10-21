@@ -6,6 +6,9 @@ class FakeWorld implements WorldView {
     final Map<String, List<Box>> blocks = new HashMap<String, List<Box>>();
     final Set<String> plates = new HashSet<String>();
     final Set<String> climbables = new HashSet<String>();
+    final Set<String> ladders = new HashSet<String>();
+    final Set<String> lowerDoors = new HashSet<String>();
+    final Set<String> cobwebs = new HashSet<String>();
     final Set<String> decorations = new HashSet<String>();
     final Map<String, List<Box>> selections = new HashMap<String, List<Box>>();
     final Set<String> unloadedChunks = new HashSet<String>();
@@ -22,6 +25,9 @@ class FakeWorld implements WorldView {
         decorations.add(key(x, y, z));
         selections.put(key(x, y, z), Arrays.asList(new Box(x, y, z, x + 1, y + 1, z + 1))); return this;
     }
+    @Override public boolean isLadder(int x, int y, int z) { return ladders.contains(key(x, y, z)); }
+    @Override public boolean isLowerDoor(int x, int y, int z) { return lowerDoors.contains(key(x, y, z)); }
+    @Override public boolean isCobweb(int x, int y, int z) { return cobwebs.contains(key(x, y, z)); }
     @Override public boolean isClimbable(int x, int y, int z) { return climbables.contains(key(x, y, z)); }
     @Override public boolean isTargetDecoration(int x, int y, int z) { return decorations.contains(key(x, y, z)); }
     @Override public boolean isLoaded(int x, int y, int z) {

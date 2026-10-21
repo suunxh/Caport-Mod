@@ -198,3 +198,34 @@ Validated on 2026-10-21:
   permissions, destination rejection, and post-teleport physics remain outside
   these checks. Embedded wall destinations intentionally allow collision;
   pressure-plate destinations continue to require support and clearance.
+
+## caport 1.2.1 checks
+
+Validated on 2026-10-21:
+
+- Local Forge 1.8.9 build: **126 tests passed**, no failures, errors, or skips
+  (118 shared core tests and 8 Forge configuration tests).
+- Local Fabric 26.3 build: **120 tests passed**, no failures, errors, or skips
+  (the same core tests and 2 Fabric configuration tests), using Java 25.
+- Regression tests cover ladder standing edges with both 1/8- and 3/16-block
+  thicknesses in all four orientations against a wall, negative coordinates,
+  changed/missing support, blocked headroom, both door halves selecting the same
+  top, missing/changed upper door halves, rail/torch support selection, and
+  unsupported, obstructed, removed, or rounded cobweb destinations. Existing
+  vine, pressure-plate, command delivery, and cooldown tests still pass.
+- In a real local Forge client/world, targeting, formatting, and revalidation
+  passed for all four attached ladder orientations, both door halves in all
+  four facing directions with the door open and closed, regular/powered/
+  detector/activator rails, normal/redstone torches, an unsupported cobweb, and
+  a vine against a supporting wall.
+- A single normal `/tp` command delivered through caport placed the player at
+  the ladder's standing edge at `(-1847.5,101,1320.6999)`. The integrated server
+  confirmed the teleport and the player remained at that position for 30 ticks.
+  The temporary native-test harness stayed outside the repository's source and
+  build output directories and is not packaged in release JARs.
+- Rail/torch targeting uses the supporting block; cobweb targeting uses the
+  aimed web's space with normal vanilla physics. Vines still use climbing space.
+  Ladder targets require a clear standing edge; they do not fall back to the
+  former vine-style destination when blocked.
+- No live Hypixel testing or Fabric gameplay test is claimed. Fabric startup
+  continues to be checked separately by the release workflow.

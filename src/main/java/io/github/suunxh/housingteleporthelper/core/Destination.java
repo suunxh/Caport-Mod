@@ -1,7 +1,7 @@
 package io.github.suunxh.housingteleporthelper.core;
 
 public final class Destination {
-    public enum Kind { STANDING, CLIMBABLE, EMBEDDED }
+    public enum Kind { STANDING, CLIMBABLE, COBWEB, EMBEDDED }
     public final int blockX, blockY, blockZ;
     public final boolean pressurePlate;
     public final Vec3d feet;

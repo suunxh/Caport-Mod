@@ -7,6 +7,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.chunk.*;
 import net.minecraft.world.phys.*;
 import net.minecraft.world.phys.shapes.CollisionContext;
@@ -44,11 +45,25 @@ public final class FabricWorldView implements WorldView {
     @Override public boolean isClimbable(int x,int y,int z) {
         return isGeometryLoaded(x,y,z) && world.getBlockState(new BlockPos(x,y,z)).is(BlockTags.CLIMBABLE);
     }
+    @Override public boolean isLadder(int x,int y,int z) {
+        return isGeometryLoaded(x,y,z) && world.getBlockState(new BlockPos(x,y,z)).getBlock() instanceof LadderBlock;
+    }
+    @Override public boolean isLowerDoor(int x,int y,int z) {
+        if(!isGeometryLoaded(x,y,z))return false;
+        BlockState state=world.getBlockState(new BlockPos(x,y,z));
+        return state.getBlock() instanceof DoorBlock && state.getValue(DoorBlock.HALF)==DoubleBlockHalf.LOWER;
+    }
+    @Override public boolean isCobweb(int x,int y,int z) {
+        return isGeometryLoaded(x,y,z) && world.getBlockState(new BlockPos(x,y,z)).is(Blocks.COBWEB);
+    }
     @Override public boolean isTargetDecoration(int x,int y,int z) {
         if(!isGeometryLoaded(x,y,z))return false;
         BlockState state=world.getBlockState(new BlockPos(x,y,z));Block block=state.getBlock();
         return state.is(BlockTags.FLOWERS) || block==Blocks.SHORT_GRASS || block==Blocks.TALL_GRASS
-            || block==Blocks.FERN || block==Blocks.LARGE_FERN || block==Blocks.DEAD_BUSH;
+            || block==Blocks.FERN || block==Blocks.LARGE_FERN || block==Blocks.DEAD_BUSH
+            || state.is(BlockTags.RAILS) || block==Blocks.TORCH || block==Blocks.WALL_TORCH
+            || block==Blocks.REDSTONE_TORCH || block==Blocks.REDSTONE_WALL_TORCH
+            || block==Blocks.SOUL_TORCH || block==Blocks.SOUL_WALL_TORCH;
     }
     @Override public List<Box> collisionBoxes(int x,int y,int z) {
         if(!isGeometryLoaded(x,y,z))return Collections.emptyList();

@@ -1,7 +1,7 @@
 plugins {
     id 'net.fabricmc.fabric-loom' version '1.18.4'
 }
-version = '1.2.0'
+version = '1.2.1'
 group = 'io.github.suunxh.caport'
 base { archivesName = 'caport-fabric-26.3' }
 repositories { mavenCentral() }

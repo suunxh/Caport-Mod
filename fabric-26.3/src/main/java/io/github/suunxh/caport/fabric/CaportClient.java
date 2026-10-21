@@ -51,7 +51,7 @@ public final class CaportClient implements ClientModInitializer {
             .then(literal("direct").executes(c->direct(c.getSource(),false,false))
                 .then(literal("authorized").executes(c->direct(c.getSource(),true,false)))
                 .then(literal("hypixel-risk").executes(c->direct(c.getSource(),true,true))))));
-        org.slf4j.LoggerFactory.getLogger("caport").info("caport 1.2.0 Fabric 26.3 initialized");
+        org.slf4j.LoggerFactory.getLogger("caport").info("caport 1.2.1 Fabric 26.3 initialized");
     }
     private String address(Minecraft mc) { return mc.getConnection()==null || mc.getConnection().getServerData()==null ? "" : mc.getConnection().getServerData().ip; }
     private int status(FabricClientCommandSource source) {
