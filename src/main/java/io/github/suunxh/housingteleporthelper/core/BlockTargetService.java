@@ -25,13 +25,13 @@ public final class BlockTargetService {
             if (!world.isGeometryLoaded(x, y, z)) return new Result(null, Failure.UNLOADED);
             Vec3d hit = world.rayHit(x, y, z, eye, end);
             if (hit != null && eye.distanceSquared(hit) <= range * range + 1e-7) {
-                // Plants, rails, and torches resolve to their ground. Never pass
+                // Plants, rails, torches, and signs resolve to ground. Never pass
                 // through a solid first hit to select a different block behind it.
                 if (!world.isTargetDecoration(x, y, z)) {
                     Destination destination = validator.targetBlock(world, x, y, z);
                     return new Result(destination, destination == null ? Failure.UNSAFE : null);
                 }
-                // Aiming at a plant, rail, or torch means its supporting ground,
+                // Aiming at a decoration means its supporting ground,
                 // rather than a distant ground tile reached by a shallow ray.
                 for (int below = y - 1; below >= y - 2 && below >= world.minY(); below--) {
                     if (!world.isGeometryLoaded(x, below, z)) return new Result(null, Failure.UNLOADED);

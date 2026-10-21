@@ -63,7 +63,7 @@ public final class FabricWorldView implements WorldView {
             || block==Blocks.FERN || block==Blocks.LARGE_FERN || block==Blocks.DEAD_BUSH
             || state.is(BlockTags.RAILS) || block==Blocks.TORCH || block==Blocks.WALL_TORCH
             || block==Blocks.REDSTONE_TORCH || block==Blocks.REDSTONE_WALL_TORCH
-            || block==Blocks.SOUL_TORCH || block==Blocks.SOUL_WALL_TORCH;
+            || block==Blocks.SOUL_TORCH || block==Blocks.SOUL_WALL_TORCH || block instanceof SignBlock;
     }
     @Override public List<Box> collisionBoxes(int x,int y,int z) {
         if(!isGeometryLoaded(x,y,z))return Collections.emptyList();

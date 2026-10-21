@@ -101,6 +101,18 @@ public class LadderDoorAndDecorationTest {
         FakeWorld world=new FakeWorld().decoration(0,64,0);
         assertNull(aim(world,new Vec3d(.5,67,.5),new Vec3d(0,-1,0)));
     }
+    @Test public void standingSignUsesGroundBelowInsteadOfItsNonCollidingBoard() {
+        FakeWorld world=new FakeWorld().solid(0,63,0).decoration(0,64,0);
+        world.selections.put(world.key(0,64,0),Arrays.asList(new Box(.25,64,.25,.75,65,.75)));
+        Destination d=aim(world,new Vec3d(.5,64.5,-3),new Vec3d(0,0,1));
+        accepted(world,d);assertEquals(63,d.blockY);assertEquals(64,d.feet.y,0);
+    }
+    @Test public void wallSignWithoutGroundContinuesToTheSolidBlockBehindIt() {
+        FakeWorld world=new FakeWorld().solid(0,64,1).decoration(0,64,0);
+        world.selections.put(world.key(0,64,0),Arrays.asList(new Box(0,64.28125,.875,1,64.78125,1)));
+        Destination d=aim(world,new Vec3d(.5,64.5,-3),new Vec3d(0,0,1));
+        accepted(world,d);assertEquals(1,d.blockZ);assertEquals(65,d.feet.y,0);
+    }
     private FakeWorld web() {
         FakeWorld world=new FakeWorld();world.cobwebs.add(world.key(0,64,0));
         world.selections.put(world.key(0,64,0),Arrays.asList(new Box(0,64,0,1,65,1)));

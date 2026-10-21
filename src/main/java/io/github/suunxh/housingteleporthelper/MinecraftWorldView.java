@@ -10,6 +10,7 @@ import net.minecraft.block.BlockVine;
 import net.minecraft.block.BlockDoor;
 import net.minecraft.block.BlockRailBase;
 import net.minecraft.block.BlockTorch;
+import net.minecraft.block.BlockSign;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.multiplayer.WorldClient;
@@ -84,7 +85,7 @@ public final class MinecraftWorldView implements WorldView {
         if (!isGeometryLoaded(x, y, z)) return false;
         Block block = world.getBlockState(new BlockPos(x, y, z)).getBlock();
         return (block instanceof BlockBush && block != Blocks.waterlily)
-                || block instanceof BlockRailBase || block instanceof BlockTorch;
+                || block instanceof BlockRailBase || block instanceof BlockTorch || block instanceof BlockSign;
     }
     @Override public List<Box> collisionBoxes(int x, int y, int z) {
         if (!isLoaded(x, y, z) || !neighborChunksLoaded(x, z)) return Collections.emptyList();

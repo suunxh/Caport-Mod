@@ -7,8 +7,8 @@ Choose the release for your Minecraft version; the two JARs are not interchangea
 
 | Minecraft Java version | Mod loader | Java runtime | Additional mod | JAR to download |
 | --- | --- | --- | --- | --- |
-| **1.8.9** | **Forge 11.15.1.2318** | **Java 8** | None | `caport-forge-1.8.9-1.2.1.jar` |
-| **26.3** | **Fabric Loader 0.19.5 or newer compatible with 26.3** | **Java 25** | **Fabric API 0.162.0+26.3** (or a compatible newer build for 26.3) | `caport-fabric-26.3-1.2.1.jar` |
+| **1.8.9** | **Forge 11.15.1.2318** | **Java 8** | None | `caport-forge-1.8.9-1.2.2.jar` |
+| **26.3** | **Fabric Loader 0.19.5 or newer compatible with 26.3** | **Java 25** | **Fabric API 0.162.0+26.3** (or a compatible newer build for 26.3) | `caport-fabric-26.3-1.2.2.jar` |
 
 1. Install [Forge for 1.8.9](https://files.minecraftforge.net/net/minecraftforge/forge/index_1.8.9.html)
    or [Fabric Loader for 26.3](https://fabricmc.net/use/installer/), then launch that profile once.
@@ -35,7 +35,7 @@ Install caport on the client only.
   other collision surfaces use their actual standing height. Ladders use their
   top edge where there is room to stand; aiming at either half of a door selects
   the top of the door. Grass/flowers, all rail types (including activator rails),
-  and torches target their supporting ground when possible, otherwise the ray
+  torches, and signs target the ground beneath them when possible, otherwise the ray
   continues behind them. Entities do not obstruct targeting or the local landing
   check. Vines place you in the climbable space beside their supporting block.
   Cobwebs place you inside the aimed web. Normal climbing, slowing, and falling

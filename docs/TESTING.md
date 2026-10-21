@@ -229,3 +229,19 @@ Validated on 2026-10-21:
   former vine-style destination when blocked.
 - No live Hypixel testing or Fabric gameplay test is claimed. Fabric startup
   continues to be checked separately by the release workflow.
+
+## caport 1.2.2 checks
+
+Validated on 2026-10-21:
+
+- Local Forge build: **128 tests passed**, no failures, errors, or skips.
+- Local Fabric build: **122 tests passed**, no failures, errors, or skips.
+- Added regression coverage for standing signs selecting their ground and wall
+  signs without ground continuing to the solid block behind the sign.
+- In a real local Forge world, targeting, command-coordinate formatting, and
+  revalidation passed for all 16 standing-sign rotations and all four wall-sign
+  facings. Standing signs selected their ground; wall signs without ground
+  selected the backing block. The temporary harness is not part of the mod.
+- This change extends decoration targeting to sign blocks; it adds no command
+  sequence or movement behavior. Fabric startup is checked by the release
+  workflow. No Fabric gameplay or live Hypixel testing is claimed.
