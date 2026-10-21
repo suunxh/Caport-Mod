@@ -162,3 +162,39 @@ Validated on 2026-10-13:
 Installation prerequisites and platform-specific JAR names are in the README;
 build/toolchain details are in `docs/BUILDING.md`. Server-side permission or
 coordinate rejection remains outside the client's control.
+
+## caport 1.2.0 checks
+
+Validated on 2026-10-21:
+
+- Forge 1.8.9: **110 tests passed**, no failures, errors, or skips (102 shared
+  core tests and 8 Forge configuration tests), locally and in GitHub Actions.
+- Fabric 26.3: **104 tests passed**, no failures, errors, or skips (the same
+  core tests and 2 Fabric configuration tests) in GitHub Actions. The Fabric
+  development client initialized caport 1.2.0, reached the title screen, and
+  shut down cleanly. The startup checker now reads the current build version.
+- New regression tests cover exact lily-pad heights after command formatting,
+  negative world heights, grass/flower ground selection, all four attached open
+  trapdoor orientations with vanilla float player dimensions, closed attached
+  trapdoors, ladder/vine destinations without a floor, climbable removal and
+  blocked headroom, first-hit embedded wall targeting, stale/unloaded wall
+  destinations, unchanged pressure-plate support rules, and delayed/once-only
+  world-join notifications.
+- A local Forge client/world verified the real native block geometry through
+  targeting, command-coordinate formatting, and final revalidation: lily pad
+  over water at Y=100.015625; flowers/grass mapping to their ground; attached
+  ladder and vine positions; all four open attached trapdoors and closed
+  trapdoors at Y=100.1875; the aimed middle block of a solid 3x3 wall; a boat
+  occupying a standing destination; and a stone pressure plate. All passed.
+  These were client-side fixture/adapter checks, not server acceptance tests
+  of embedded/climbable teleports. The temporary harness was kept outside the
+  source tree and is not included in release JARs.
+- The Forge chat log confirmed the new `[caport] Mod successfully loaded...`
+  message on joining the local world. Shared lifecycle tests cover world
+  changes, reconnects, and waiting for a player before announcing.
+- H/Z are the new block/plate defaults. Existing saved bindings, execution
+  settings, single-command delivery, and cooldown behavior remain intact.
+- No Fabric gameplay or live Hypixel testing is claimed. Server command
+  permissions, destination rejection, and post-teleport physics remain outside
+  these checks. Embedded wall destinations intentionally allow collision;
+  pressure-plate destinations continue to require support and clearance.
